@@ -20,6 +20,8 @@ router.get('/history', asyncHandler(SubscriptionController.getHistory as any));
 router.post('/checkout', asyncHandler(SubscriptionController.createCheckout as any));
 router.post('/verify', asyncHandler(SubscriptionController.verifyPayment as any));
 router.post('/cancel', asyncHandler(SubscriptionController.cancelSubscription as any));
+router.get('/boost/status', asyncHandler(SubscriptionController.getBoostStatus as any));
+router.get('/boost', asyncHandler(SubscriptionController.getBoostStatus as any));
 router.post('/boost', asyncHandler(SubscriptionController.activateBoost as any));
 
 // Admin Protected Endpoints

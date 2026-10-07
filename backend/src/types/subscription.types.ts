@@ -49,9 +49,11 @@ export interface SubscriptionPlanItem {
 
 export interface ActiveBoostInfo {
   isActive: boolean;
+  startedAt?: string | null;
   expiresAt: string | null;
   remainingSeconds: number;
   multiplier: number;
+  message?: string;
 }
 
 export interface FeatureUsageSummary {

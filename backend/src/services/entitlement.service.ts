@@ -120,7 +120,7 @@ export class EntitlementService {
 
       // 6. Check currently active boost
       const [activeBoostRows] = await conn.query<RowDataPacket[]>(
-        `SELECT expires_at, multiplier, TIMESTAMPDIFF(SECOND, NOW(), expires_at) as remaining_seconds
+        `SELECT started_at, expires_at, multiplier, TIMESTAMPDIFF(SECOND, NOW(), expires_at) as remaining_seconds
          FROM profile_boosts 
          WHERE user_id = ? AND status = 'active' AND expires_at > NOW() 
          ORDER BY id DESC LIMIT 1`,
@@ -129,6 +129,7 @@ export class EntitlementService {
 
       let activeBoost: ActiveBoostInfo = {
         isActive: false,
+        startedAt: null,
         expiresAt: null,
         remainingSeconds: 0,
         multiplier: 1.0,
@@ -138,6 +139,7 @@ export class EntitlementService {
         const b = activeBoostRows[0];
         activeBoost = {
           isActive: true,
+          startedAt: b.started_at ? new Date(b.started_at).toISOString() : null,
           expiresAt: new Date(b.expires_at).toISOString(),
           remainingSeconds: Math.max(0, Number(b.remaining_seconds || 0)),
           multiplier: Number(b.multiplier || 2.5),

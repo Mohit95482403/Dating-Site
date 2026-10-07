@@ -370,6 +370,14 @@ export class SubscriptionService {
   }
 
   /**
+   * 7b. Get active profile boost status for user
+   */
+  public static async getProfileBoostStatus(userId: number): Promise<ActiveBoostInfo> {
+    const entitlements = await EntitlementService.getUserEntitlements(userId);
+    return entitlements.activeBoost;
+  }
+
+  /**
    * 8. Admin: Subscription & Revenue Analytics Telemetry
    */
   public static async getAdminSubscriptionAnalytics(): Promise<AdminSubscriptionAnalytics> {

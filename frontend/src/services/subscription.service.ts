@@ -77,7 +77,7 @@ export class SubscriptionService {
    */
   public static async getBoostStatus(): Promise<BoostStatusResult> {
     const response = await api.get('/subscriptions/boost/status');
-    return response.data?.data;
+    return response.data?.data || { isActive: false, remainingSeconds: 0 };
   }
 
   /**

@@ -133,6 +133,23 @@ export class SubscriptionController {
   }
 
   /**
+   * GET /api/subscriptions/boost/status
+   * Get active Profile Boost countdown and status
+   */
+  public static async getBoostStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        throw new AppError('Authentication required.', HttpStatus.UNAUTHORIZED);
+      }
+      const boostInfo = await SubscriptionService.getProfileBoostStatus(userId);
+      ApiResponse.success(res, 'Profile boost status retrieved successfully.', boostInfo);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
    * POST /api/subscriptions/webhook
    * Inbound verified provider webhook callback
    */
