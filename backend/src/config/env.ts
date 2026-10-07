@@ -44,33 +44,45 @@ const validateEnv = (): void => {
 
 validateEnv();
 
-const frontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:5173';
+const normalizeOrigin = (url?: string): string => {
+  if (!url) return '';
+  return url.trim().replace(/\/+$/, '');
+};
+
+const frontendUrl =
+  normalizeOrigin(process.env.FRONTEND_URL) ||
+  normalizeOrigin(process.env.CLIENT_URL) ||
+  'https://connectly.mohitsonawane425.workers.dev';
 
 // Build allowed origins from environment + defaults
 const buildAllowedOrigins = (): string[] => {
   const origins = new Set<string>();
 
-  // Always include the primary frontend URL
-  origins.add(frontendUrl);
+  // 1. Mandatory production Cloudflare frontend origin
+  origins.add('https://connectly.mohitsonawane425.workers.dev');
 
-  // Include any extra origins from ALLOWED_ORIGINS env var (comma-separated)
+  // 2. Primary frontend URL from environment
+  if (frontendUrl) origins.add(frontendUrl);
+
+  // 3. Include any extra origins from ALLOWED_ORIGINS env var (comma-separated)
   if (process.env.ALLOWED_ORIGINS) {
     process.env.ALLOWED_ORIGINS.split(',').forEach((o) => {
-      const trimmed = o.trim();
+      const trimmed = normalizeOrigin(o);
       if (trimmed) origins.add(trimmed);
     });
   }
 
-  // Include CLIENT_URL if set separately
-  if (process.env.CLIENT_URL) origins.add(process.env.CLIENT_URL);
+  // 4. Include CLIENT_URL and CORS_ORIGIN if set separately
+  if (process.env.CLIENT_URL) origins.add(normalizeOrigin(process.env.CLIENT_URL));
+  if (process.env.CORS_ORIGIN) origins.add(normalizeOrigin(process.env.CORS_ORIGIN));
 
-  // Always allow localhost in non-production
-  if (process.env.NODE_ENV !== 'production') {
-    origins.add('http://localhost:5173');
-    origins.add('http://127.0.0.1:5173');
-  }
+  // 5. Development origins (always permitted for local dev & testing)
+  origins.add('http://localhost:5173');
+  origins.add('http://127.0.0.1:5173');
+  origins.add('http://localhost:3000');
+  origins.add('http://127.0.0.1:3000');
 
-  return Array.from(origins);
+  return Array.from(origins).filter(Boolean);
 };
 
 export const config: { env: Config } = {

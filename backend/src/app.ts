@@ -5,6 +5,7 @@ import path from 'path';
 import config from './config/env';
 import routes from './routes';
 import { requestLogger } from './middleware/requestLogger';
+import { logger } from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFoundHandler';
 import { authMiddleware } from './middleware/authMiddleware';
@@ -33,26 +34,50 @@ const createApp = (): Application => {
   // 4. Request Logging with request ID correlation
   app.use(requestLogger);
 
-  // 5. Hardened CORS Configuration
-  app.use(
-    cors({
-      origin: (origin, callback) => {
-        // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
-        if (!origin) return callback(null, true);
+  // 5. Hardened CORS Configuration & Universal Preflight Handling
+  const corsOptions: cors.CorsOptions = {
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
 
-        const allowed = config.env.cors.allowedOrigins;
-        if (allowed.includes(origin) || (!config.env.isProduction && (origin.includes('localhost') || origin.includes('127.0.0.1')))) {
-          return callback(null, true);
-        }
-        return callback(new Error(`CORS policy rejection: Origin ${origin} is not authorized`));
-      },
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Request-Id'],
-      exposedHeaders: ['RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset', 'Retry-After', 'X-Request-Id'],
-      maxAge: 86400, // 24 hours pre-flight cache
-    })
-  );
+      const normalizedOrigin = origin.trim().replace(/\/+$/, '');
+      const allowed = config.env.cors.allowedOrigins;
+
+      if (
+        allowed.includes(normalizedOrigin) ||
+        (!config.env.isProduction &&
+          (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(normalizedOrigin)))
+      ) {
+        return callback(null, true);
+      }
+
+      logger.warn(`[CORS] Blocked request from unauthorized origin: ${origin}`);
+      return callback(null, false);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'X-Request-Id',
+      'Accept',
+      'Origin',
+    ],
+    exposedHeaders: [
+      'RateLimit-Limit',
+      'RateLimit-Remaining',
+      'RateLimit-Reset',
+      'Retry-After',
+      'X-Request-Id',
+    ],
+    optionsSuccessStatus: 200,
+    maxAge: 86400, // 24 hours pre-flight cache
+  };
+
+  app.use(cors(corsOptions));
+  // Explicit preflight handler across all route trees
+  app.options('*', cors(corsOptions));
 
   // 6. Request Body Parsers with Strict Size Limits
   app.use(express.json({ limit: '1mb' }));

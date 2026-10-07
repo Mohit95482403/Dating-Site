@@ -49,6 +49,11 @@ export const createRateLimiter = (options: RateLimiterOptions) => {
   }, 5 * 60 * 1000).unref();
 
   return (req: Request, res: Response, next: NextFunction): void => {
+    // Preflight OPTIONS requests should never be rate limited
+    if (req.method === 'OPTIONS') {
+      return next();
+    }
+
     const key = keyGenerator(req);
     const now = Date.now();
 
