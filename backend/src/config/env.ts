@@ -46,6 +46,33 @@ validateEnv();
 
 const frontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:5173';
 
+// Build allowed origins from environment + defaults
+const buildAllowedOrigins = (): string[] => {
+  const origins = new Set<string>();
+
+  // Always include the primary frontend URL
+  origins.add(frontendUrl);
+
+  // Include any extra origins from ALLOWED_ORIGINS env var (comma-separated)
+  if (process.env.ALLOWED_ORIGINS) {
+    process.env.ALLOWED_ORIGINS.split(',').forEach((o) => {
+      const trimmed = o.trim();
+      if (trimmed) origins.add(trimmed);
+    });
+  }
+
+  // Include CLIENT_URL if set separately
+  if (process.env.CLIENT_URL) origins.add(process.env.CLIENT_URL);
+
+  // Always allow localhost in non-production
+  if (process.env.NODE_ENV !== 'production') {
+    origins.add('http://localhost:5173');
+    origins.add('http://127.0.0.1:5173');
+  }
+
+  return Array.from(origins);
+};
+
 export const config: { env: Config } = {
   env: {
     port: parseInt(process.env.PORT || '5000', 10),
@@ -66,11 +93,7 @@ export const config: { env: Config } = {
     },
     cors: {
       frontendUrl,
-      allowedOrigins: [
-        frontendUrl,
-        'http://localhost:5173',
-        'http://127.0.0.1:5173',
-      ],
+      allowedOrigins: buildAllowedOrigins(),
     },
   },
 };

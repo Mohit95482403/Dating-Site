@@ -5,21 +5,28 @@ import { logger } from '../utils/logger';
 const { host, port: dbPort, name: dbName, user, password } = config.env.database;
 
 // Create MySQL connection pool with production-grade configurations
-export const pool = mysql.createPool({
+const poolConfig: mysql.PoolOptions = {
   host,
   port: dbPort,
   database: dbName,
   user,
   password,
   waitForConnections: true,
-  connectionLimit: 15,
+  connectionLimit: config.env.isProduction ? 10 : 15,
   queueLimit: 0,
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
   charset: 'utf8mb4',
   timezone: 'Z', // UTC-oriented timestamps
-  dateStrings: true
-});
+  dateStrings: true,
+};
+
+// Enable SSL for production cloud databases (PlanetScale, Aiven, Railway, etc.)
+if (process.env.DB_SSL === 'true') {
+  poolConfig.ssl = { rejectUnauthorized: false };
+}
+
+export const pool = mysql.createPool(poolConfig);
 
 
 /**
