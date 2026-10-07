@@ -93,7 +93,15 @@ const AdminLayoutContent: React.FC = () => {
         />
 
         <main className="admin-content-area">
-          <Outlet context={{ refreshBadges: fetchBadgeCounts }} />
+          <React.Suspense
+            fallback={
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+                <div className="admin-loading-spinner" />
+              </div>
+            }
+          >
+            <Outlet context={{ refreshBadges: fetchBadgeCounts }} />
+          </React.Suspense>
         </main>
       </div>
 

@@ -5,15 +5,19 @@
   z-index: 0;
   overflow: hidden;
   background-color: var(--bg-primary);
+  contain: strict;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 .bg-glow {
   position: absolute;
   border-radius: 50%;
-  filter: blur(130px);
-  opacity: 0.16;
-  mix-blend-mode: screen;
+  filter: blur(60px);
+  opacity: 0.2;
   will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 .orb-1 {
@@ -21,8 +25,8 @@
   height: 580px;
   top: -140px;
   left: -80px;
-  background: radial-gradient(circle, #6366f1 0%, rgba(139, 92, 246, 0.35) 70%, transparent 100%);
-  animation: float 16s ease-in-out infinite alternate;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.45) 0%, rgba(139, 92, 246, 0.25) 50%, transparent 80%);
+  animation: float 20s ease-in-out infinite alternate;
 }
 
 .orb-2 {
@@ -30,8 +34,8 @@
   height: 620px;
   top: 25%;
   right: -120px;
-  background: radial-gradient(circle, #ec4899 0%, rgba(139, 92, 246, 0.25) 70%, transparent 100%);
-  animation: float-reverse 20s ease-in-out infinite alternate;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, rgba(139, 92, 246, 0.2) 50%, transparent 80%);
+  animation: float-reverse 24s ease-in-out infinite alternate;
 }
 
 .orb-3 {
@@ -39,8 +43,8 @@
   height: 480px;
   bottom: -60px;
   left: 20%;
-  background: radial-gradient(circle, #38bdf8 0%, rgba(99, 102, 241, 0.2) 70%, transparent 100%);
-  animation: pulse-glow 12s ease-in-out infinite alternate;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, rgba(99, 102, 241, 0.15) 50%, transparent 80%);
+  animation: pulse-glow 16s ease-in-out infinite alternate;
 }
 
 .bg-grid-pattern {

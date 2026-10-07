@@ -15,48 +15,84 @@ export class AdminModel {
    * Fetch real aggregate database statistics and chart trend data
    */
   public static async getDashboardStats(range: AdminDateRange = '30d'): Promise<AdminDashboardStats> {
-    // 1. Core aggregate metrics
-    const [[userCounts]] = await pool.query<RowDataPacket[]>(`
-      SELECT 
-        COUNT(*) AS totalUsers,
-        SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) AS activeUsers,
-        SUM(CASE WHEN status = 'suspended' THEN 1 ELSE 0 END) AS suspendedUsers,
-        SUM(CASE WHEN status = 'banned' THEN 1 ELSE 0 END) AS bannedUsers
-      FROM users
-      WHERE status != 'deleted'
-    `);
-
-    const [[matchCounts]] = await pool.query<RowDataPacket[]>(`
-      SELECT COUNT(*) AS totalMatches FROM matches WHERE status = 'active'
-    `);
-
-    const [[messageCounts]] = await pool.query<RowDataPacket[]>(`
-      SELECT COUNT(*) AS totalMessages FROM messages
-    `);
-
-    const [[reportCounts]] = await pool.query<RowDataPacket[]>(`
-      SELECT COUNT(*) AS pendingReports FROM reports WHERE status IN ('pending', 'under_review', 'reviewing')
-    `);
-
-    const [[verifCounts]] = await pool.query<RowDataPacket[]>(`
-      SELECT COUNT(*) AS pendingVerifications FROM verification_requests WHERE status = 'pending'
-    `);
-
-    const [[verifiedUserCounts]] = await pool.query<RowDataPacket[]>(`
-      SELECT COUNT(*) AS verifiedUsers FROM profiles WHERE is_verified = TRUE
-    `);
-
     // Determine days back for trend calculations
     let days = 30;
     if (range === '7d') days = 7;
     else if (range === '90d') days = 90;
     else if (range === 'all') days = 365;
 
-    const [[newUserCounts]] = await pool.query<RowDataPacket[]>(`
-      SELECT COUNT(*) AS newUsers 
-      FROM users 
-      WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
-    `, [days]);
+    // Parallel aggregate queries for max throughput
+    const [
+      [[userCounts]],
+      [[matchCounts]],
+      [[messageCounts]],
+      [[reportCounts]],
+      [[verifCounts]],
+      [[verifiedUserCounts]],
+      [[newUserCounts]],
+      [userDaily],
+      [matchDaily],
+      [messageDaily],
+      [reportDaily],
+    ] = await Promise.all([
+      pool.query<RowDataPacket[]>(`
+        SELECT 
+          COUNT(*) AS totalUsers,
+          SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) AS activeUsers,
+          SUM(CASE WHEN status = 'suspended' THEN 1 ELSE 0 END) AS suspendedUsers,
+          SUM(CASE WHEN status = 'banned' THEN 1 ELSE 0 END) AS bannedUsers
+        FROM users
+        WHERE status != 'deleted'
+      `),
+      pool.query<RowDataPacket[]>(`
+        SELECT COUNT(*) AS totalMatches FROM matches WHERE status = 'active'
+      `),
+      pool.query<RowDataPacket[]>(`
+        SELECT COUNT(*) AS totalMessages FROM messages
+      `),
+      pool.query<RowDataPacket[]>(`
+        SELECT COUNT(*) AS pendingReports FROM reports WHERE status IN ('pending', 'under_review', 'reviewing')
+      `),
+      pool.query<RowDataPacket[]>(`
+        SELECT COUNT(*) AS pendingVerifications FROM verification_requests WHERE status = 'pending'
+      `),
+      pool.query<RowDataPacket[]>(`
+        SELECT COUNT(*) AS verifiedUsers FROM profiles WHERE is_verified = TRUE
+      `),
+      pool.query<RowDataPacket[]>(`
+        SELECT COUNT(*) AS newUsers 
+        FROM users 
+        WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+      `, [days]),
+      pool.query<RowDataPacket[]>(`
+        SELECT DATE(created_at) AS date_val, COUNT(*) AS count_val
+        FROM users
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+        GROUP BY DATE(created_at)
+        ORDER BY date_val ASC
+      `, [days]),
+      pool.query<RowDataPacket[]>(`
+        SELECT DATE(matched_at) AS date_val, COUNT(*) AS count_val
+        FROM matches
+        WHERE matched_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+        GROUP BY DATE(matched_at)
+        ORDER BY date_val ASC
+      `, [days]),
+      pool.query<RowDataPacket[]>(`
+        SELECT DATE(created_at) AS date_val, COUNT(*) AS count_val
+        FROM messages
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+        GROUP BY DATE(created_at)
+        ORDER BY date_val ASC
+      `, [days]),
+      pool.query<RowDataPacket[]>(`
+        SELECT DATE(created_at) AS date_val, COUNT(*) AS count_val
+        FROM reports
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+        GROUP BY DATE(created_at)
+        ORDER BY date_val ASC
+      `, [days]),
+    ]);
 
     // 2. Trend chart data: date-grouped by day
     // Generate dates array for the past N days
@@ -65,42 +101,6 @@ export class AdminModel {
     const matchGrowth: number[] = [];
     const messageGrowth: number[] = [];
     const reportGrowth: number[] = [];
-
-    // Query daily registrations
-    const [userDaily] = await pool.query<RowDataPacket[]>(`
-      SELECT DATE(created_at) AS date_val, COUNT(*) AS count_val
-      FROM users
-      WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-      GROUP BY DATE(created_at)
-      ORDER BY date_val ASC
-    `, [days]);
-
-    // Query daily matches
-    const [matchDaily] = await pool.query<RowDataPacket[]>(`
-      SELECT DATE(matched_at) AS date_val, COUNT(*) AS count_val
-      FROM matches
-      WHERE matched_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-      GROUP BY DATE(matched_at)
-      ORDER BY date_val ASC
-    `, [days]);
-
-    // Query daily messages
-    const [messageDaily] = await pool.query<RowDataPacket[]>(`
-      SELECT DATE(created_at) AS date_val, COUNT(*) AS count_val
-      FROM messages
-      WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-      GROUP BY DATE(created_at)
-      ORDER BY date_val ASC
-    `, [days]);
-
-    // Query daily reports
-    const [reportDaily] = await pool.query<RowDataPacket[]>(`
-      SELECT DATE(created_at) AS date_val, COUNT(*) AS count_val
-      FROM reports
-      WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-      GROUP BY DATE(created_at)
-      ORDER BY date_val ASC
-    `, [days]);
 
     const userMap = new Map<string, number>();
     for (const r of userDaily) userMap.set(new Date(r.date_val).toISOString().split('T')[0], Number(r.count_val));

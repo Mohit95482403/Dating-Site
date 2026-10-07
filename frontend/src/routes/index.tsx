@@ -1,55 +1,66 @@
+import { lazy } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
-import LandingPage from '../pages/LandingPage';
-import LoginPage from '../pages/LoginPage';
-import RegisterPage from '../pages/RegisterPage';
-import ForgotPasswordPage from '../pages/ForgotPasswordPage';
-import ResetPasswordPage from '../pages/ResetPasswordPage';
-import DashboardPage from '../pages/DashboardPage';
-import OnboardingPage from '../pages/onboarding/OnboardingPage';
-import HowItWorksPage from '../pages/HowItWorksPage';
-import WatchHowItWorksPage from '../pages/WatchHowItWorksPage';
-import SafetyPage from '../pages/SafetyPage';
-import AboutPage from '../pages/AboutPage';
-import NotFoundPage from '../pages/NotFoundPage';
 import ProtectedRoute from './ProtectedRoute';
 import PublicRoute from './PublicRoute';
-import ProfilePage from '../pages/profile/ProfilePage';
-import DiscoveryPage from '../pages/discovery/DiscoveryPage';
-import MatchesPage from '../pages/matches/MatchesPage';
-import MatchDetailsPage from '../pages/matches/MatchDetailsPage';
-import MessagesPage from '../pages/chat/MessagesPage';
-import NotificationsPage from '../pages/notifications/NotificationsPage';
-import SettingsPage from '../pages/settings/SettingsPage';
-import PremiumPage from '../pages/premium/PremiumPage';
-import LikesReceivedPage from '../pages/likes/LikesReceivedPage';
-import FeedPage from '../pages/feed/FeedPage';
-import SavedPostsPage from '../pages/feed/SavedPostsPage';
-import ExplorePage from '../pages/explore/ExplorePage';
-import HashtagPage from '../pages/explore/HashtagPage';
-import { CommunitiesExplorePage } from '../pages/communities/CommunitiesExplorePage';
-import { CommunityDetailPage } from '../pages/communities/CommunityDetailPage';
-
-// Day 17 & 21 Admin Panel imports
 import AdminRoute from './AdminRoute';
 import AdminLayout from '../layouts/AdminLayout';
-import AdminDashboardPage from '../pages/admin/DashboardPage';
-import AdminUsersPage from '../pages/admin/UsersPage';
-import AdminUserDetailsPage from '../pages/admin/UserDetailsPage';
-import AdminReportsPage from '../pages/admin/ReportsPage';
-import AdminVerificationPage from '../pages/admin/VerificationPage';
-import AdminNotificationsPage from '../pages/admin/NotificationsPage';
-import AdminAuditLogsPage from '../pages/admin/AuditLogsPage';
-import AdminAnalyticsPage from '../pages/admin/AnalyticsPage';
-import AdminSubscriptionsPage from '../pages/admin/SubscriptionsPage';
-import AdminContentPage from '../pages/admin/ContentPage';
-import AdminTrustSafetyPage from '../pages/admin/TrustSafetyPage';
-import AdminRecommendationsPage from '../pages/admin/RecommendationsPage';
-import AdminSystemHealthPage from '../pages/admin/SystemHealthPage';
-import AdminSupportPage from '../pages/admin/SupportPage';
-import AdminSettingsPage from '../pages/admin/SettingsPage';
-import AdminFeatureFlagsPage from '../pages/admin/FeatureFlagsPage';
 import RouteErrorBoundary from '../components/common/RouteErrorBoundary';
+
+
+// Lazy Loaded Pages
+const LandingPage = lazy(() => import('../pages/LandingPage'));
+const LoginPage = lazy(() => import('../pages/LoginPage'));
+const RegisterPage = lazy(() => import('../pages/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('../pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'));
+const DashboardPage = lazy(() => import('../pages/DashboardPage'));
+const OnboardingPage = lazy(() => import('../pages/onboarding/OnboardingPage'));
+const HowItWorksPage = lazy(() => import('../pages/HowItWorksPage'));
+const WatchHowItWorksPage = lazy(() => import('../pages/WatchHowItWorksPage'));
+const SafetyPage = lazy(() => import('../pages/SafetyPage'));
+const AboutPage = lazy(() => import('../pages/AboutPage'));
+const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
+
+// Protected User Pages
+const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'));
+const DiscoveryPage = lazy(() => import('../pages/discovery/DiscoveryPage'));
+const MatchesPage = lazy(() => import('../pages/matches/MatchesPage'));
+const MatchDetailsPage = lazy(() => import('../pages/matches/MatchDetailsPage'));
+const MessagesPage = lazy(() => import('../pages/chat/MessagesPage'));
+const NotificationsPage = lazy(() => import('../pages/notifications/NotificationsPage'));
+const SettingsPage = lazy(() => import('../pages/settings/SettingsPage'));
+const PremiumPage = lazy(() => import('../pages/premium/PremiumPage'));
+const LikesReceivedPage = lazy(() => import('../pages/likes/LikesReceivedPage'));
+const FeedPage = lazy(() => import('../pages/feed/FeedPage'));
+const SavedPostsPage = lazy(() => import('../pages/feed/SavedPostsPage'));
+const ExplorePage = lazy(() => import('../pages/explore/ExplorePage'));
+const HashtagPage = lazy(() => import('../pages/explore/HashtagPage'));
+const CommunitiesExplorePage = lazy(() =>
+  import('../pages/communities/CommunitiesExplorePage').then((m) => ({ default: m.CommunitiesExplorePage }))
+);
+const CommunityDetailPage = lazy(() =>
+  import('../pages/communities/CommunityDetailPage').then((m) => ({ default: m.CommunityDetailPage }))
+);
+
+// Admin Panel Pages
+const AdminDashboardPage = lazy(() => import('../pages/admin/DashboardPage'));
+const AdminUsersPage = lazy(() => import('../pages/admin/UsersPage'));
+const AdminUserDetailsPage = lazy(() => import('../pages/admin/UserDetailsPage'));
+const AdminReportsPage = lazy(() => import('../pages/admin/ReportsPage'));
+const AdminVerificationPage = lazy(() => import('../pages/admin/VerificationPage'));
+const AdminNotificationsPage = lazy(() => import('../pages/admin/NotificationsPage'));
+const AdminAuditLogsPage = lazy(() => import('../pages/admin/AuditLogsPage'));
+const AdminAnalyticsPage = lazy(() => import('../pages/admin/AnalyticsPage'));
+const AdminSubscriptionsPage = lazy(() => import('../pages/admin/SubscriptionsPage'));
+const AdminContentPage = lazy(() => import('../pages/admin/ContentPage'));
+const AdminTrustSafetyPage = lazy(() => import('../pages/admin/TrustSafetyPage'));
+const AdminRecommendationsPage = lazy(() => import('../pages/admin/RecommendationsPage'));
+const AdminSystemHealthPage = lazy(() => import('../pages/admin/SystemHealthPage'));
+const AdminSupportPage = lazy(() => import('../pages/admin/SupportPage'));
+const AdminSettingsPage = lazy(() => import('../pages/admin/SettingsPage'));
+const AdminFeatureFlagsPage = lazy(() => import('../pages/admin/FeatureFlagsPage'));
+
 
 export const router = createBrowserRouter([
   // 1. Regular Client Application Routes

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef, useTransition } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, useTransition, useMemo } from 'react';
 import type { ReactNode, FC } from 'react';
 import type { AuthUser, LoginPayload, RegisterPayload } from '../types/auth';
 import { authService } from '../services/auth.service';
@@ -109,7 +109,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   /**
    * Log in user with credentials
    */
-  const login = async (payload: LoginPayload): Promise<AuthUser> => {
+  const login = useCallback(async (payload: LoginPayload): Promise<AuthUser> => {
     try {
       const { user: loggedInUser } = await authService.login(payload);
       setUser(loggedInUser);
@@ -119,12 +119,12 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       const normalized = normalizeApiError(error);
       throw normalized;
     }
-  };
+  }, [toast]);
 
   /**
    * Register a new user
    */
-  const register = async (payload: RegisterPayload): Promise<AuthUser> => {
+  const register = useCallback(async (payload: RegisterPayload): Promise<AuthUser> => {
     try {
       const { user: registeredUser } = await authService.register(payload);
       setUser(registeredUser);
@@ -134,12 +134,12 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       const normalized = normalizeApiError(error);
       throw normalized;
     }
-  };
+  }, [toast]);
 
   /**
    * Log out of current session
    */
-  const logout = async (): Promise<void> => {
+  const logout = useCallback(async (): Promise<void> => {
     try {
       await authService.logout();
     } catch {
@@ -149,12 +149,12 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       setAccessToken(null);
       toast.info('You have been logged out.');
     }
-  };
+  }, [toast]);
 
   /**
    * Log out of all sessions across all devices
    */
-  const logoutAll = async (): Promise<void> => {
+  const logoutAll = useCallback(async (): Promise<void> => {
     try {
       await authService.logoutAll();
     } catch {
@@ -164,12 +164,12 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       setAccessToken(null);
       toast.info('Logged out from all devices.');
     }
-  };
+  }, [toast]);
 
   /**
    * Refresh current user identity from server
    */
-  const refreshUser = async (): Promise<void> => {
+  const refreshUser = useCallback(async (): Promise<void> => {
     try {
       const updatedUser = await authService.getCurrentUser();
       setUser(updatedUser);
@@ -177,21 +177,24 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       const normalized = normalizeApiError(error);
       throw normalized;
     }
-  };
+  }, []);
+
+  const authContextValue = useMemo<AuthContextType>(
+    () => ({
+      user,
+      isAuthenticated: !!user,
+      isLoading,
+      login,
+      register,
+      logout,
+      logoutAll,
+      refreshUser,
+    }),
+    [user, isLoading, login, register, logout, logoutAll, refreshUser]
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isLoading,
-        login,
-        register,
-        logout,
-        logoutAll,
-        refreshUser,
-      }}
-    >
+    <AuthContext.Provider value={authContextValue}>
       {children}
     </AuthContext.Provider>
   );

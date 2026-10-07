@@ -48,7 +48,7 @@ const formatMessageTime = (isoString?: string): string => {
   }
 };
 
-export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onReact }) => {
+export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({ message, onReact }) => {
   const [showPicker, setShowPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement | null>(null);
 
@@ -157,6 +157,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onReact }
       </div>
     </div>
   );
-};
+});
 
 export default MessageBubble;

@@ -76,20 +76,27 @@ export const FeedPage: React.FC = () => {
 
   // Infinite scroll trigger
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      if (
-        window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 &&
-        hasMore &&
-        !loadingPosts &&
-        !loadingMore &&
-        !loadingRef.current
-      ) {
-        loadingRef.current = true;
-        fetchPosts(page + 1, true);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          if (
+            window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 &&
+            hasMore &&
+            !loadingPosts &&
+            !loadingMore &&
+            !loadingRef.current
+          ) {
+            loadingRef.current = true;
+            fetchPosts(page + 1, true);
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [hasMore, loadingPosts, loadingMore, page, fetchPosts]);
 

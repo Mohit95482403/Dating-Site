@@ -505,32 +505,57 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     showToast,
   ]);
 
+  const contextValue = React.useMemo<CallContextValue>(
+    () => ({
+      callState,
+      activeCall,
+      callType,
+      partner,
+      localStream,
+      remoteStream,
+      isMuted,
+      isCameraOff,
+      isRemoteMuted,
+      isRemoteCameraOff,
+      callDuration,
+      connectionState,
+      errorMessage,
+      startCall,
+      acceptCall,
+      rejectCall,
+      cancelCall,
+      endCall,
+      toggleMute,
+      toggleCamera,
+      clearError,
+    }),
+    [
+      callState,
+      activeCall,
+      callType,
+      partner,
+      localStream,
+      remoteStream,
+      isMuted,
+      isCameraOff,
+      isRemoteMuted,
+      isRemoteCameraOff,
+      callDuration,
+      connectionState,
+      errorMessage,
+      startCall,
+      acceptCall,
+      rejectCall,
+      cancelCall,
+      endCall,
+      toggleMute,
+      toggleCamera,
+      clearError,
+    ]
+  );
+
   return (
-    <CallContext.Provider
-      value={{
-        callState,
-        activeCall,
-        callType,
-        partner,
-        localStream,
-        remoteStream,
-        isMuted,
-        isCameraOff,
-        isRemoteMuted,
-        isRemoteCameraOff,
-        callDuration,
-        connectionState,
-        errorMessage,
-        startCall,
-        acceptCall,
-        rejectCall,
-        cancelCall,
-        endCall,
-        toggleMute,
-        toggleCamera,
-        clearError,
-      }}
-    >
+    <CallContext.Provider value={contextValue}>
       {children}
     </CallContext.Provider>
   );

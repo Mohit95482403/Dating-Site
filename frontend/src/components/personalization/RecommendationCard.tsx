@@ -19,7 +19,7 @@ interface RecommendationCardProps {
   onActionClick?: (recommendation: ScoredRecommendation<any>) => void;
 }
 
-export const RecommendationCard: React.FC<RecommendationCardProps> = ({
+export const RecommendationCard: React.FC<RecommendationCardProps> = React.memo(({
   recommendation,
   onFeedback,
   onActionClick,
@@ -214,6 +214,6 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
       />
     </>
   );
-};
+});
 
 export default RecommendationCard;

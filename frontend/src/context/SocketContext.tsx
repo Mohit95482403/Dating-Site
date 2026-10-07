@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '../hooks/useAuth';
 import { getAccessToken } from '../services/api';
@@ -51,13 +51,38 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [activityToast, setActivityToast] = useState<NotificationItem | null>(null);
   const matchToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activityToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastCountsFetchRef = useRef<number>(0);
   const navigate = useNavigate();
 
-  const refreshMatchCount = useCallback(async () => {
+  const refreshAllCounts = useCallback(async () => {
     if (!isAuthenticated) {
       setMatchCount(0);
+      setUnreadMessageCount(0);
+      setUnreadNotificationCount(0);
       return;
     }
+
+    const now = Date.now();
+    // Throttle duplicate count queries within 2 seconds
+    if (now - lastCountsFetchRef.current < 2000) return;
+    lastCountsFetchRef.current = now;
+
+    try {
+      const [matches, unreadChat, unreadNotif] = await Promise.all([
+        matchService.getMatchCount().catch(() => 0),
+        chatService.getUnreadCount().catch(() => 0),
+        notificationService.getUnreadCount().catch(() => 0),
+      ]);
+      setMatchCount(matches);
+      setUnreadMessageCount(unreadChat);
+      setUnreadNotificationCount(unreadNotif);
+    } catch {
+      // ignore
+    }
+  }, [isAuthenticated]);
+
+  const refreshMatchCount = useCallback(async () => {
+    if (!isAuthenticated) return;
     try {
       const count = await matchService.getMatchCount();
       setMatchCount(count);
@@ -67,10 +92,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [isAuthenticated]);
 
   const refreshUnreadCount = useCallback(async () => {
-    if (!isAuthenticated) {
-      setUnreadMessageCount(0);
-      return;
-    }
+    if (!isAuthenticated) return;
     try {
       const count = await chatService.getUnreadCount();
       setUnreadMessageCount(count);
@@ -80,10 +102,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [isAuthenticated]);
 
   const refreshNotificationCount = useCallback(async () => {
-    if (!isAuthenticated) {
-      setUnreadNotificationCount(0);
-      return;
-    }
+    if (!isAuthenticated) return;
     try {
       const count = await notificationService.getUnreadCount();
       setUnreadNotificationCount(count);
@@ -95,15 +114,13 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Initial counts fetch on auth
   useEffect(() => {
     if (isAuthenticated) {
-      refreshMatchCount();
-      refreshUnreadCount();
-      refreshNotificationCount();
+      refreshAllCounts();
     } else {
       setMatchCount(0);
       setUnreadMessageCount(0);
       setUnreadNotificationCount(0);
     }
-  }, [isAuthenticated, refreshMatchCount, refreshUnreadCount, refreshNotificationCount]);
+  }, [isAuthenticated, refreshAllCounts]);
 
   // Socket connection lifecycle
   useEffect(() => {
@@ -129,9 +146,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     newSocket.on('connect', () => {
       setIsConnected(true);
       // Synchronize counts on connect/reconnect
-      refreshMatchCount();
-      refreshUnreadCount();
-      refreshNotificationCount();
+      refreshAllCounts();
     });
 
     newSocket.on('disconnect', () => {
@@ -280,22 +295,37 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return <Bell size={16} className="text-indigo-400" />;
   };
 
+  const contextValue = useMemo<SocketContextValue>(
+    () => ({
+      socket,
+      isConnected,
+      matchCount,
+      unreadMessageCount,
+      unreadNotificationCount,
+      setMatchCount,
+      setUnreadMessageCount,
+      setUnreadNotificationCount,
+      refreshMatchCount,
+      refreshUnreadCount,
+      refreshNotificationCount,
+    }),
+    [
+      socket,
+      isConnected,
+      matchCount,
+      unreadMessageCount,
+      unreadNotificationCount,
+      setMatchCount,
+      setUnreadMessageCount,
+      setUnreadNotificationCount,
+      refreshMatchCount,
+      refreshUnreadCount,
+      refreshNotificationCount,
+    ]
+  );
+
   return (
-    <SocketContext.Provider
-      value={{
-        socket,
-        isConnected,
-        matchCount,
-        unreadMessageCount,
-        unreadNotificationCount,
-        setMatchCount,
-        setUnreadMessageCount,
-        setUnreadNotificationCount,
-        refreshMatchCount,
-        refreshUnreadCount,
-        refreshNotificationCount,
-      }}
-    >
+    <SocketContext.Provider value={contextValue}>
       {children}
 
       {/* Floating Real-Time Match Notification Banner */}

@@ -23,7 +23,7 @@ interface PostCardProps {
   onPostDeleted?: (postId: number) => void;
 }
 
-export const PostCard: React.FC<PostCardProps> = ({ post, onPostDeleted }) => {
+export const PostCard: React.FC<PostCardProps> = React.memo(({ post, onPostDeleted }) => {
   const { user } = useAuth();
   const currentUserId = user?.id ? Number(user.id) : null;
   const isOwner = post.userId === currentUserId;
@@ -258,6 +258,6 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onPostDeleted }) => {
       )}
     </article>
   );
-};
+});
 
 export default PostCard;

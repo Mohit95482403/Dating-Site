@@ -157,24 +157,41 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const isPremium = Boolean(entitlements?.isPremium);
   const badge = entitlements?.badge || null;
 
+  const contextValue = React.useMemo<SubscriptionContextValue>(
+    () => ({
+      entitlements,
+      subscription,
+      plans,
+      boostStatus,
+      isLoading,
+      isPremium,
+      badge,
+      hasFeature,
+      refreshSubscription,
+      activateBoost,
+      upgradeModalState,
+      openUpgradeModal,
+      closeUpgradeModal,
+    }),
+    [
+      entitlements,
+      subscription,
+      plans,
+      boostStatus,
+      isLoading,
+      isPremium,
+      badge,
+      hasFeature,
+      refreshSubscription,
+      activateBoost,
+      upgradeModalState,
+      openUpgradeModal,
+      closeUpgradeModal,
+    ]
+  );
+
   return (
-    <SubscriptionContext.Provider
-      value={{
-        entitlements,
-        subscription,
-        plans,
-        boostStatus,
-        isLoading,
-        isPremium,
-        badge,
-        hasFeature,
-        refreshSubscription,
-        activateBoost,
-        upgradeModalState,
-        openUpgradeModal,
-        closeUpgradeModal,
-      }}
-    >
+    <SubscriptionContext.Provider value={contextValue}>
       {children}
     </SubscriptionContext.Provider>
   );

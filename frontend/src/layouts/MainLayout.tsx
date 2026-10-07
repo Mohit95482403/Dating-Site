@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import AnimatedBackground from '../components/common/AnimatedBackground';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 import { SocketProvider } from '../context/SocketContext';
 import { CallProvider } from '../context/CallContext';
 import { SubscriptionProvider } from '../context/SubscriptionContext';
@@ -18,7 +19,15 @@ export const MainLayout: React.FC = () => {
             <AnimatedBackground />
             <Navbar />
             <main className="app-main-content">
-              <Outlet />
+              <Suspense
+                fallback={
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+                    <LoadingSpinner size="md" />
+                  </div>
+                }
+              >
+                <Outlet />
+              </Suspense>
             </main>
             <Footer />
           </div>
