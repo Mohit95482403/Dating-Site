@@ -1,0 +1,570 @@
+/* ==========================================================================
+   CONNECTLY — USER DASHBOARD COMPREHENSIVE RESPONSIVE STYLESHEET
+   Supports: 320px -> 1920px (Mobile, Tablet, Laptop, Desktop)
+   Theme: High-End Dark Glassmorphism, Cinematic Gradients & Polished Glows
+   ========================================================================== */
+
+.dashboard-page {
+  min-height: calc(100vh - 76px);
+  padding: 2.5rem 0 5rem;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-x: clip;
+}
+
+/* Onboarding Callout Banner */
+.onboarding-callout-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(236, 72, 153, 0.08) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 25px rgba(99, 102, 241, 0.1);
+  margin-bottom: 2rem;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.callout-text-wrap {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.callout-pill {
+  display: inline-block;
+  font-size: 0.725rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--accent-purple);
+  letter-spacing: 0.04em;
+  margin-bottom: 0.35rem;
+}
+
+.callout-text-wrap h3 {
+  font-size: clamp(1.1rem, 3.5vw, 1.25rem);
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 0.25rem;
+  overflow-wrap: break-word;
+}
+
+.callout-text-wrap p {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+}
+
+.callout-action-link {
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.callout-btn {
+  min-height: 44px;
+}
+
+/* Dashboard Hero / Intelligence Hub Card */
+.dashboard-hero-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2.25rem 2.75rem;
+  border-radius: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+  margin-bottom: 2.75rem;
+  gap: 1.75rem;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.dashboard-hero-card.intelligence-hub-card {
+  margin-top: 1.5rem;
+}
+
+.dashboard-hero-content {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.dashboard-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  color: var(--accent-purple);
+  font-size: clamp(0.68rem, 2vw, 0.75rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 0.85rem;
+  max-width: 100%;
+  white-space: normal;
+  line-height: 1.4;
+  box-sizing: border-box;
+}
+
+.sparkle-icon {
+  color: var(--accent-purple);
+  flex-shrink: 0;
+}
+
+.dashboard-title {
+  font-size: clamp(1.4rem, 4.5vw, 2.25rem);
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 0.6rem;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+
+.intelligence-hub-title {
+  font-size: clamp(1.2rem, 3.8vw, 1.45rem);
+}
+
+.highlight-name {
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dashboard-subtitle {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: clamp(0.85rem, 2.4vw, 1rem);
+  max-width: 650px;
+  line-height: 1.6;
+  margin-bottom: 1.35rem;
+  overflow-wrap: break-word;
+}
+
+.user-meta-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.meta-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.85);
+  min-width: 0;
+}
+
+.meta-tag.email-tag {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+.meta-icon.verified {
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+.dashboard-hero-actions {
+  flex-shrink: 0;
+}
+
+.dashboard-signout-btn {
+  min-height: 44px;
+  padding: 0.65rem 1.25rem;
+  touch-action: manipulation;
+}
+
+/* Feature Navigation Section */
+.section-title {
+  font-size: clamp(1.15rem, 3.5vw, 1.35rem);
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 1.25rem;
+  overflow-wrap: break-word;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2.75rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.feature-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.75rem;
+  border-radius: 18px;
+  background: rgba(23, 26, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 51, 102, 0.3);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35), 0 0 20px rgba(255, 51, 102, 0.15);
+}
+
+.feature-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  flex-shrink: 0;
+}
+
+.discover-icon {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.matches-icon {
+  background: rgba(255, 51, 102, 0.15);
+  color: #ff4d79;
+}
+
+.messages-icon {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+}
+
+.profile-icon {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.feature-card h3 {
+  font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 0.4rem;
+  overflow-wrap: break-word;
+}
+
+.feature-card p {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.5;
+  flex: 1;
+  margin-bottom: 1.25rem;
+  overflow-wrap: break-word;
+}
+
+.feature-link-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ff4d79;
+  transition: transform 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.feature-card:hover .feature-link-text {
+  transform: translateX(4px);
+}
+
+/* Active Device Sessions Card */
+.sessions-card {
+  padding: 2rem 2.25rem;
+  border-radius: 20px;
+  background: rgba(23, 26, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.sessions-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.sessions-card-header h3 {
+  font-size: clamp(1.1rem, 3.2vw, 1.25rem);
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 0.2rem;
+  overflow-wrap: break-word;
+}
+
+.sessions-card-header p {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+  overflow-wrap: break-word;
+}
+
+.logout-all-btn {
+  min-height: 40px;
+  touch-action: manipulation;
+}
+
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: rgba(18, 21, 37, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.session-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.7);
+  flex-shrink: 0;
+}
+
+.session-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.session-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.25rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.session-title span:first-child {
+  min-width: 0;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.current-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.session-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.775rem;
+  color: rgba(255, 255, 255, 0.5);
+  flex-wrap: wrap;
+  word-break: break-word;
+  min-width: 0;
+}
+
+.session-revoke-btn {
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  color: #fb7185;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-height: 38px;
+  touch-action: manipulation;
+}
+
+.session-revoke-btn:hover {
+  background: rgba(244, 63, 94, 0.25);
+  color: #ffffff;
+}
+
+.sessions-loading {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 1rem 0;
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+
+/* Tablet & Smaller Laptops (<= 1024px) */
+@media (max-width: 1024px) {
+  .dashboard-page {
+    padding: 2.25rem 0 4.5rem;
+  }
+  .feature-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.15rem;
+  }
+  .dashboard-hero-card {
+    padding: 2rem 2.25rem;
+  }
+}
+
+/* Tablet (<= 768px) */
+@media (max-width: 768px) {
+  .dashboard-page {
+    padding: 2rem 0 4rem;
+  }
+  .onboarding-callout-banner {
+    padding: 1.35rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.15rem;
+  }
+  .callout-btn {
+    width: 100% !important;
+  }
+  .dashboard-hero-card {
+    padding: 1.75rem 1.5rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.5rem;
+  }
+  .dashboard-hero-actions {
+    width: 100%;
+  }
+  .dashboard-signout-btn {
+    width: 100% !important;
+    justify-content: center;
+  }
+  .sessions-card {
+    padding: 1.6rem 1.35rem;
+  }
+}
+
+/* Mobile Devices (<= 600px) */
+@media (max-width: 600px) {
+  .feature-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 2.25rem;
+  }
+  .sessions-card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+  }
+  .logout-all-btn {
+    width: 100% !important;
+  }
+}
+
+/* Mobile Devices (<= 480px) */
+@media (max-width: 480px) {
+  .dashboard-page {
+    padding: 1.25rem 0 3rem;
+  }
+  .onboarding-callout-banner {
+    padding: 1.15rem 1rem;
+    border-radius: 16px;
+  }
+  .dashboard-hero-card {
+    padding: 1.35rem 1rem;
+    border-radius: 18px;
+  }
+  .feature-card {
+    padding: 1.35rem 1.1rem;
+    border-radius: 15px;
+  }
+  .sessions-card {
+    padding: 1.35rem 1rem;
+    border-radius: 16px;
+  }
+  .session-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+    padding: 1rem 0.85rem;
+  }
+  .session-revoke-btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* Extra Small Phones (<= 360px) */
+@media (max-width: 360px) {
+  .dashboard-page {
+    padding: 1rem 0 2.5rem;
+  }
+  .dashboard-badge {
+    font-size: 0.68rem;
+    padding: 0.25rem 0.65rem;
+  }
+  .meta-tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.55rem;
+  }
+  .feature-card {
+    padding: 1.15rem 0.85rem;
+  }
+  .sessions-card {
+    padding: 1.15rem 0.85rem;
+  }
+}

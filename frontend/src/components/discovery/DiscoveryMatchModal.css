@@ -1,0 +1,225 @@
+/* ==========================================================================
+   DISCOVERY MATCH MODAL STYLES (DAY 11 CELEBRATION MODAL)
+   ========================================================================== */
+
+.match-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.match-modal-card {
+  position: relative;
+  background: linear-gradient(180deg, #1f2338 0%, #11131e 100%);
+  border: 1px solid rgba(255, 51, 102, 0.4);
+  border-radius: 28px;
+  max-width: 480px;
+  width: 100%;
+  padding: 2.5rem 1.75rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.85), 0 0 40px rgba(255, 51, 102, 0.25);
+  overflow: hidden;
+}
+
+.match-modal-glow {
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255, 51, 102, 0.35) 0%, transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+.match-celebration-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #ff4d79;
+  margin-bottom: 0.5rem;
+}
+
+.sparkle-icon {
+  color: #fbbf24;
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+.match-title {
+  font-size: 2.15rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ffffff 0%, #ff80a0 50%, #c084fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.match-subtitle {
+  color: #cbd5e1;
+  font-size: 1.05rem;
+  margin: 0.5rem 0 1.75rem;
+  max-width: 360px;
+  line-height: 1.5;
+}
+
+/* Dual Avatars */
+.match-dual-avatars-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  width: 100%;
+}
+
+.match-avatar-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.match-avatar-circle {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #ff3366;
+  box-shadow: 0 0 20px rgba(255, 51, 102, 0.4);
+  background: #1e293b;
+}
+
+@media (min-width: 480px) {
+  .match-avatar-circle {
+    width: 104px;
+    height: 104px;
+  }
+}
+
+.match-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.match-avatar-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.match-avatar-heart-burst {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 51, 102, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(255, 51, 102, 0.5);
+  animation: heart-pulse 1.6s infinite ease-in-out;
+  flex-shrink: 0;
+}
+
+.match-compat-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
+  padding: 0.4rem 0.9rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+}
+
+/* Actions */
+.match-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.match-primary-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #ff3366 0%, #ba25b9 50%, #7928ca 100%);
+  color: #ffffff;
+  padding: 0.9rem 1.5rem;
+  border-radius: 9999px;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 24px rgba(255, 51, 102, 0.4);
+  width: 100%;
+}
+
+.match-primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(255, 51, 102, 0.6);
+}
+
+.match-secondary-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  padding: 0.85rem 1.5rem;
+  border-radius: 9999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.match-secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+@keyframes heart-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}

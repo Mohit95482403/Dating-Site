@@ -1,0 +1,208 @@
+.photo-viewer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: rgba(6, 9, 15, 0.95);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: viewerFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes viewerFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.photo-viewer-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.photo-viewer-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  z-index: 10;
+}
+
+.photo-viewer-counter {
+  background: rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+}
+
+.photo-viewer-close-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.photo-viewer-close-btn:hover {
+  background: rgba(239, 68, 68, 0.8);
+  border-color: rgba(239, 68, 68, 0.9);
+  transform: rotate(90deg) scale(1.05);
+}
+
+.photo-viewer-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.photo-viewer-image-wrap {
+  position: relative;
+  max-width: 90vw;
+  max-height: 75vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-viewer-image {
+  max-width: 100%;
+  max-height: 75vh;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.photo-viewer-primary-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: linear-gradient(135deg, #e11d48, #be123c);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.5);
+}
+
+.photo-viewer-nav-btn {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(8px);
+  position: absolute;
+  z-index: 5;
+}
+
+.photo-viewer-nav-btn:hover {
+  background: rgba(225, 29, 72, 0.9);
+  border-color: rgba(225, 29, 72, 1);
+  transform: scale(1.1);
+}
+
+.photo-viewer-nav-btn.prev-btn {
+  left: 1rem;
+}
+
+.photo-viewer-nav-btn.next-btn {
+  right: 1rem;
+}
+
+.photo-viewer-thumbnails {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.photo-viewer-thumb-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  opacity: 0.6;
+}
+
+.photo-viewer-thumb-btn.active {
+  border-color: #f43f5e;
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.photo-viewer-thumb-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .photo-viewer-container {
+    padding: 0.75rem;
+  }
+  .photo-viewer-nav-btn {
+    width: 40px;
+    height: 40px;
+  }
+  .photo-viewer-nav-btn.prev-btn {
+    left: 0.25rem;
+  }
+  .photo-viewer-nav-btn.next-btn {
+    right: 0.25rem;
+  }
+  .photo-viewer-thumb-btn {
+    width: 42px;
+    height: 42px;
+  }
+}

@@ -1,0 +1,124 @@
+.auth-loader-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 40%, rgba(255, 51, 102, 0.08) 0%, rgba(10, 12, 20, 0.98) 75%);
+  backdrop-filter: blur(16px);
+  z-index: 9999;
+}
+
+.auth-loader-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2.5rem 3rem;
+  border-radius: 24px;
+  background: rgba(18, 21, 37, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 51, 102, 0.15);
+  animation: authFadeIn 0.35s ease-out;
+}
+
+@keyframes authFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.auth-loader-logo-wrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.auth-loader-brand-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ff3366 0%, #ff6b8b 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 10px 25px rgba(255, 51, 102, 0.4);
+  z-index: 2;
+}
+
+.auth-loader-pulse {
+  position: absolute;
+  inset: -6px;
+  border-radius: 22px;
+  background: rgba(255, 51, 102, 0.3);
+  animation: authPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  z-index: 1;
+}
+
+@keyframes authPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.1;
+  }
+}
+
+.auth-loader-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #ffffff 0%, #ff9ebb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1.5rem;
+}
+
+.auth-loader-indicator {
+  width: 140px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.auth-loader-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 45%;
+  background: linear-gradient(90deg, #ff3366, #ff7a9e);
+  border-radius: 3px;
+  animation: authBarMove 1.5s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes authBarMove {
+  0% {
+    left: -45%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.auth-loader-message {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}

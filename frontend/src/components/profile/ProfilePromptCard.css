@@ -1,0 +1,84 @@
+.profile-prompt-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-prompt-card:hover {
+  border-color: rgba(244, 63, 94, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.4);
+}
+
+.prompt-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.prompt-card-icon-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.prompt-quote-icon {
+  color: #f43f5e;
+  flex-shrink: 0;
+}
+
+.prompt-question {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.prompt-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.prompt-action-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.prompt-action-btn.edit:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.prompt-action-btn.delete:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.prompt-answer {
+  font-size: 1.05rem;
+  color: #f8fafc;
+  line-height: 1.55;
+  font-weight: 400;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

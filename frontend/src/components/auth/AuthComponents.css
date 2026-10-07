@@ -1,0 +1,319 @@
+/* ==========================================================================
+   AUTH COMPONENTS STYLING
+   ========================================================================== */
+
+/* Form Field & Labels */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  position: relative;
+  text-align: left;
+}
+
+.form-label {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  letter-spacing: 0.02em;
+}
+
+.required-mark {
+  color: var(--accent-coral, #f43f5e);
+  font-weight: 700;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(18, 21, 37, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: #f1f3f9;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.form-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--accent-violet, #6366f1);
+  background: rgba(21, 25, 39, 0.95);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18), 0 0 16px rgba(99, 102, 241, 0.12);
+}
+
+.form-input.input-error,
+.form-select.input-error {
+  border-color: #f43f5e;
+  box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.25);
+}
+
+.field-error-msg {
+  font-size: 0.775rem;
+  color: #fb7185;
+  font-weight: 500;
+  margin-top: 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.field-helper-msg {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 0.2rem;
+}
+
+/* Password Input */
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper .password-field {
+  padding-right: 2.75rem;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  padding: 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.password-toggle-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.password-toggle-btn:focus-visible {
+  outline: 2px solid #ff3366;
+  outline-offset: 1px;
+}
+
+/* Password Strength */
+.password-strength-container {
+  margin-top: 0.4rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.strength-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+}
+
+.strength-label {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.strength-text {
+  font-weight: 700;
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+}
+
+.strength-bar-track {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.strength-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease;
+}
+
+/* Form Error Alert */
+.form-error-alert {
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  color: #fecdd3;
+  margin-bottom: 1.25rem;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.form-error-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.form-error-icon {
+  color: #fb7185;
+  flex-shrink: 0;
+}
+
+.form-error-list {
+  margin-top: 0.5rem;
+  margin-left: 1.5rem;
+  font-size: 0.8rem;
+  color: rgba(254, 205, 211, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+/* Step Indicator */
+.step-indicator-nav {
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.step-indicator-list {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+
+.step-item:last-child {
+  flex: 0;
+}
+
+.step-badge-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: none;
+  cursor: default;
+  padding: 0;
+  z-index: 2;
+}
+
+.step-badge-btn.clickable {
+  cursor: pointer;
+}
+
+.step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  transition: all 0.25s ease;
+}
+
+.step-item.active .step-circle {
+  background: #ff3366;
+  border-color: #ff6b8b;
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(255, 51, 102, 0.6);
+}
+
+.step-item.completed .step-circle {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.step-label-text {
+  font-size: 0.725rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.02em;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+
+.step-item.active .step-label-text {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.step-item.completed .step-label-text {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.step-connector {
+  position: absolute;
+  top: 16px;
+  left: 32px;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  z-index: 1;
+  transform: translateY(-50%);
+  transition: background 0.3s ease;
+}
+
+.step-connector.filled {
+  background: #10b981;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 500px) {
+  .step-label-text {
+    font-size: 0.65rem;
+  }
+  .step-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+  .step-connector {
+    top: 14px;
+    left: 28px;
+  }
+}

@@ -1,0 +1,627 @@
+/* ==========================================================================
+   CONNECTLY — PROFILE VERIFICATION REQUEST MODAL
+   Complete Production-Grade UI + Overlap & Responsive Architecture
+   ========================================================================== */
+
+/* 1. Modal Overlay / Backdrop */
+.verification-modal-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(4, 7, 16, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(10px, 3vw, 24px);
+  box-sizing: border-box;
+  overflow-y: auto;
+  animation: vrmBackdropFade 0.22s ease-out;
+}
+
+/* 2. Modal Container Dialog */
+.verification-modal-container {
+  position: relative;
+  width: min(540px, calc(100vw - 20px));
+  max-width: 540px;
+  max-height: min(90dvh, 780px);
+  background: linear-gradient(180deg, rgba(20, 24, 38, 0.98) 0%, rgba(12, 15, 26, 0.99) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg, 20px);
+  box-shadow: 
+    0 25px 60px rgba(0, 0, 0, 0.75), 
+    0 0 35px rgba(99, 102, 241, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+  animation: vrmDialogScale 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 3. Modal Header */
+.verification-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 1.25rem 1.5rem 1.125rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.015);
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.verification-modal-header-lead {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.verification-modal-header-icon-box {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: 12px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.verification-modal-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.verification-modal-title {
+  font-family: var(--font-heading, inherit);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.3;
+  margin: 0;
+  word-break: break-word;
+  letter-spacing: -0.01em;
+}
+
+.verification-modal-subtitle {
+  font-size: 0.84rem;
+  color: #94a3b8;
+  margin: 3px 0 0 0;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* Close Button - Accessible & Touch Friendly */
+.verification-modal-close-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  touch-action: manipulation;
+  margin-top: 2px;
+}
+
+.verification-modal-close-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  transform: scale(1.05);
+}
+
+.verification-modal-close-btn:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+
+/* 4. Form Wrapper */
+.verification-modal-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* 5. Scrollable Body */
+.verification-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-sizing: border-box;
+  overscroll-behavior: contain;
+}
+
+/* Slim modern scrollbar */
+.verification-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.verification-modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.verification-modal-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+
+.verification-modal-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Error Alert */
+.verification-error-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  box-sizing: border-box;
+}
+
+.verification-error-text {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+/* Instructions Card */
+.verification-instructions {
+  background: rgba(30, 41, 59, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  box-sizing: border-box;
+}
+
+.instructions-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.instructions-list {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: #94a3b8;
+  font-size: 0.835rem;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.instructions-list li {
+  word-break: break-word;
+}
+
+/* 6. Upload Area & Dropzone */
+.verification-upload-zone {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.verification-dropzone {
+  border: 2px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  padding: 1.75rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.65rem;
+  cursor: pointer;
+  background: rgba(15, 23, 42, 0.45);
+  transition: all 0.22s ease;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+.verification-dropzone:hover,
+.verification-dropzone.drag-over {
+  border-color: #38bdf8;
+  background: rgba(14, 165, 233, 0.08);
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.15);
+  transform: translateY(-1px);
+}
+
+.verification-dropzone:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+
+.dropzone-icon-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.14);
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.verification-dropzone:hover .dropzone-icon-circle,
+.verification-dropzone.drag-over .dropzone-icon-circle {
+  transform: scale(1.08);
+}
+
+.dropzone-content-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.dropzone-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.dropzone-hint {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+/* 7. Document Preview Container */
+.verification-preview-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  background: rgba(15, 23, 42, 0.65);
+  border-radius: 14px;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
+}
+
+.verification-preview-image-box {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 10px;
+  padding: 0.5rem;
+  max-height: 200px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.verification-preview-img {
+  max-height: 180px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+.verification-preview-details {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.verification-preview-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.verification-preview-filename {
+  font-size: 0.85rem;
+  color: #f1f5f9;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.verification-preview-filesize {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.verification-remove-file-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
+  touch-action: manipulation;
+}
+
+.verification-remove-file-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ffffff;
+}
+
+/* 8. Privacy & Confidentiality Badge */
+.verification-privacy-badge {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  font-size: 0.82rem;
+  color: #a7f3d0;
+  line-height: 1.45;
+  box-sizing: border-box;
+}
+
+.verification-privacy-text {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.verification-privacy-badge strong {
+  color: #6ee7b7;
+}
+
+/* 9. Fixed Bottom Footer */
+.verification-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.125rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(11, 14, 25, 0.85);
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.verification-btn-cancel {
+  min-height: 42px;
+}
+
+.verification-btn-submit {
+  min-height: 42px;
+  min-width: 165px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.verification-loading-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.verification-spinner-icon {
+  animation: vrmSpin 1s linear infinite;
+}
+
+/* Keyframe Animations */
+@keyframes vrmBackdropFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes vrmDialogScale {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes vrmSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN SYSTEM & BREAKPOINTS
+   ========================================================================== */
+
+/* Tablet & Smaller Desktops (768px - 1024px) */
+@media (max-width: 768px) {
+  .verification-modal-container {
+    max-width: 520px;
+  }
+}
+
+/* Mobile Screens (<= 540px) */
+@media (max-width: 540px) {
+  .verification-modal-overlay {
+    padding: 12px;
+    align-items: center;
+  }
+
+  .verification-modal-container {
+    width: 100%;
+    max-height: 92dvh;
+    border-radius: 16px;
+  }
+
+  .verification-modal-header {
+    padding: 1.125rem 1.25rem 1rem 1.25rem;
+    gap: 10px;
+  }
+
+  .verification-modal-body {
+    padding: 1.125rem 1.25rem;
+    gap: 1rem;
+  }
+
+  .verification-modal-footer {
+    padding: 1rem 1.25rem;
+    gap: 0.65rem;
+  }
+
+  .verification-btn-cancel,
+  .verification-btn-submit {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+  }
+}
+
+/* Small Mobile Screens (<= 400px) */
+@media (max-width: 400px) {
+  .verification-modal-header {
+    padding: 1rem 1rem 0.85rem 1rem;
+    gap: 8px;
+  }
+
+  .verification-modal-header-icon-box {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    border-radius: 10px;
+  }
+
+  .verification-modal-title {
+    font-size: 1.12rem;
+  }
+
+  .verification-modal-subtitle {
+    font-size: 0.78rem;
+  }
+
+  .verification-modal-close-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+  }
+
+  .verification-modal-body {
+    padding: 0.85rem 1rem;
+    gap: 0.85rem;
+  }
+
+  .verification-dropzone {
+    padding: 1.25rem 0.75rem;
+  }
+
+  .dropzone-icon-circle {
+    width: 44px;
+    height: 44px;
+  }
+
+  .dropzone-text {
+    font-size: 0.88rem;
+  }
+
+  .verification-preview-wrap {
+    padding: 0.75rem;
+  }
+
+  .verification-preview-img {
+    max-height: 150px;
+  }
+
+  .verification-preview-details {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .verification-remove-file-btn {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .verification-modal-footer {
+    padding: 0.85rem 1rem;
+  }
+}
+
+/* Ultra Narrow Devices (<= 330px) */
+@media (max-width: 330px) {
+  .verification-modal-overlay {
+    padding: 8px;
+  }
+
+  .verification-modal-container {
+    width: 100%;
+    border-radius: 14px;
+  }
+
+  .verification-modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .verification-btn-cancel,
+  .verification-btn-submit {
+    width: 100%;
+  }
+}

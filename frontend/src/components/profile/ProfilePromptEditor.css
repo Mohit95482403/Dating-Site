@@ -1,0 +1,134 @@
+.profile-prompt-editor-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px dashed rgba(244, 63, 94, 0.4);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-top: 1rem;
+}
+
+.prompt-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.editor-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.editor-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 6px;
+  transition: color 0.2s;
+}
+
+.editor-close-btn:hover {
+  color: #f87171;
+}
+
+.prompt-editor-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.prompt-editor-alert.error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.prompt-select-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.prompt-form-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.prompt-select-field {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  padding: 0.65rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.prompt-select-field:focus {
+  border-color: #f43f5e;
+}
+
+.prompt-answer-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.prompt-answer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.prompt-char-counter {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+.prompt-char-counter.near-limit {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.prompt-answer-textarea {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.prompt-answer-textarea:focus {
+  border-color: #f43f5e;
+}
+
+.prompt-editor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.prompt-editor-loading {
+  padding: 1.5rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
