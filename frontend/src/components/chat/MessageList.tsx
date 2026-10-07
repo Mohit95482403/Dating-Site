@@ -8,6 +8,7 @@ import type { MessageItem, ConversationPartner } from '../../types/chat';
 interface MessageListProps {
   messages: MessageItem[];
   partner: ConversationPartner;
+  currentUserId?: number | null;
   loading: boolean;
   loadingOlder: boolean;
   hasMore: boolean;
@@ -21,6 +22,7 @@ interface MessageListProps {
 export const MessageList: React.FC<MessageListProps> = ({
   messages,
   partner,
+  currentUserId,
   loading,
   loadingOlder,
   hasMore,
@@ -141,6 +143,7 @@ export const MessageList: React.FC<MessageListProps> = ({
         <MessageBubble
           key={msg.id}
           message={msg}
+          currentUserId={currentUserId}
           onReact={onReact}
         />
       ))}

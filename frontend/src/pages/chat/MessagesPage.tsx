@@ -1,13 +1,22 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import ConversationList from '../../components/chat/ConversationList';
 import ChatWindow from '../../components/chat/ChatWindow';
 import chatService from '../../services/chat.service';
 import { useSocket } from '../../hooks/useSocket';
+import { useAuth } from '../../hooks/useAuth';
+import { isMessageFromCurrentUser } from '../../utils/helpers';
 import type { ConversationItem, MessageItem } from '../../types/chat';
 import '../../components/chat/Chat.css';
 
 export const MessagesPage: React.FC = () => {
+  const { user } = useAuth();
+  const currentUserId = user?.id != null ? Number(user.id) : null;
+  const currentUserIdRef = useRef<number | null>(currentUserId);
+  useEffect(() => {
+    currentUserIdRef.current = currentUserId;
+  }, [currentUserId]);
+
   const { conversationId } = useParams<{ conversationId?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -33,8 +42,20 @@ export const MessagesPage: React.FC = () => {
     setLoadingConversations(true);
     try {
       const data = await chatService.getConversations();
-      setConversations(data);
-      return data;
+      const normalizedConversations = (data || []).map((conv) => {
+        if (conv.lastMessage) {
+          return {
+            ...conv,
+            lastMessage: {
+              ...conv.lastMessage,
+              isFromMe: isMessageFromCurrentUser(conv.lastMessage.senderId, currentUserIdRef.current),
+            },
+          };
+        }
+        return conv;
+      });
+      setConversations(normalizedConversations);
+      return normalizedConversations;
     } catch (err) {
       console.error('Failed to load conversations:', err);
       return [];
@@ -124,6 +145,8 @@ export const MessagesPage: React.FC = () => {
   // Update conversation list preview when message sent or received
   const handleUpdateConversation = useCallback(
     (convId: number, message: MessageItem) => {
+      const isFromCurrent = isMessageFromCurrentUser(message.senderId, currentUserIdRef.current);
+
       setConversations((prev) => {
         const targetIndex = prev.findIndex((c) => c.conversationId === convId);
         if (targetIndex === -1) return prev;
@@ -139,10 +162,10 @@ export const MessagesPage: React.FC = () => {
             content: message.content,
             messageType: message.messageType,
             createdAt: message.createdAt,
-            isFromMe: message.isFromMe,
+            isFromMe: isFromCurrent,
           },
           lastMessageTime: message.createdAt,
-          unreadCount: isCurrentActive || message.isFromMe ? 0 : target.unreadCount + 1,
+          unreadCount: isCurrentActive || isFromCurrent ? 0 : target.unreadCount + 1,
           updatedAt: message.createdAt,
         };
 

@@ -469,20 +469,30 @@ export const emitNewMessage = (
 ): void => {
   try {
     if (!io) return;
+    const cleanMessage: MessageItem = {
+      ...message,
+      senderId: Number(message.senderId),
+    };
+
     // Broadcast to active conversation room
     io.to(`conversation:${conversationId}`).emit('message:new', {
       conversationId,
-      message,
+      message: cleanMessage,
     });
+
+    const partnerMessage: MessageItem = {
+      ...cleanMessage,
+      isFromMe: false,
+    };
 
     // Also notify partner user directly to update unread badges and conversation list
     io.to(`user:${partnerUserId}`).emit('conversation:updated', {
       conversationId,
-      lastMessage: message,
+      lastMessage: partnerMessage,
     });
     io.to(`user:${partnerUserId}`).emit('message:received', {
       conversationId,
-      message,
+      message: partnerMessage,
     });
   } catch (err) {
     logger.warn('[Socket] Failed to emit new message:', err);

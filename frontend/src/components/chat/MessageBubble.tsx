@@ -1,9 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Check, CheckCheck, Smile } from 'lucide-react';
 import type { MessageItem } from '../../types/chat';
+import { useAuth } from '../../hooks/useAuth';
+import { isMessageFromCurrentUser } from '../../utils/helpers';
 
 interface MessageBubbleProps {
   message: MessageItem;
+  currentUserId?: number | null;
   onReact?: (messageId: number, reaction: string) => void;
 }
 
@@ -48,11 +51,18 @@ const formatMessageTime = (isoString?: string): string => {
   }
 };
 
-export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({ message, onReact }) => {
+export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({ message, currentUserId: propUserId, onReact }) => {
   const [showPicker, setShowPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement | null>(null);
 
-  const isFromMe = message.isFromMe;
+  const { user } = useAuth();
+  const effectiveUserId = propUserId !== undefined ? propUserId : (user?.id != null ? Number(user.id) : null);
+
+  // Core alignment rule: message.senderId === currentUserId -> RIGHT (from-me), message.senderId !== currentUserId -> LEFT (from-partner)
+  const isFromMe = effectiveUserId != null && message?.senderId != null
+    ? isMessageFromCurrentUser(message.senderId, effectiveUserId)
+    : Boolean(message.isFromMe);
+
   const timeFormatted = formatMessageTime(message.createdAt);
   const reactions = message.reactions || [];
 

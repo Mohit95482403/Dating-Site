@@ -5,6 +5,8 @@ import MessageComposer from './MessageComposer';
 import ChatEmptyState from './ChatEmptyState';
 import chatService from '../../services/chat.service';
 import { useSocket } from '../../hooks/useSocket';
+import { useAuth } from '../../hooks/useAuth';
+import { isMessageFromCurrentUser } from '../../utils/helpers';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import type {
   ConversationItem,
@@ -26,6 +28,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   onUpdateConversation,
   isMobileHidden = false,
 }) => {
+  const { user } = useAuth();
+  const currentUserId = user?.id != null ? Number(user.id) : null;
   const { socket, isConnected, refreshUnreadCount } = useSocket();
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -44,6 +48,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     isOnline: conversation?.otherUser.isOnline ?? false,
     lastSeenAt: conversation?.otherUser.lastSeenAt ?? null,
   });
+
+  const currentUserIdRef = useRef<number | null>(currentUserId);
+  useEffect(() => {
+    currentUserIdRef.current = currentUserId;
+  }, [currentUserId]);
 
   // Sync initial presence when conversation changes
   useEffect(() => {
@@ -64,7 +73,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
     try {
       const data = await chatService.getMessages(conversation.conversationId, { limit: 30 });
-      setMessages(data.messages);
+      const normalizedMessages = (data.messages || []).map((m) => ({
+        ...m,
+        isFromMe: isMessageFromCurrentUser(m.senderId, currentUserIdRef.current),
+      }));
+      setMessages(normalizedMessages);
       setHasMore(data.hasMore);
       setNextCursor(data.nextCursor ?? null);
 
@@ -97,21 +110,27 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     const handleNewMessage = (payload: { conversationId: number; message: MessageItem }) => {
       if (payload.conversationId !== convId) return;
 
+      const isFromCurrent = isMessageFromCurrentUser(payload.message.senderId, currentUserIdRef.current);
+      const normalizedMsg: MessageItem = {
+        ...payload.message,
+        isFromMe: isFromCurrent,
+      };
+
       setMessages((prev) => {
-        if (prev.some((m) => m.id === payload.message.id)) {
+        if (prev.some((m) => m.id === normalizedMsg.id)) {
           return prev;
         }
-        return [...prev, payload.message];
+        return [...prev, normalizedMsg];
       });
 
       if (onUpdateConversation) {
-        onUpdateConversation(convId, payload.message);
+        onUpdateConversation(convId, normalizedMsg);
       }
 
       // If incoming from partner, send delivery acknowledgment and mark as read
-      if (!payload.message.isFromMe) {
+      if (!isFromCurrent) {
         socket.emit('message:delivered', {
-          messageId: payload.message.id,
+          messageId: normalizedMsg.id,
           conversationId: convId,
         });
         chatService.markAsRead(convId).catch(() => {});
@@ -133,7 +152,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       if (payload.isTyping) {
         setIsPartnerTyping(true);
         setPartnerTypingName(payload.userName);
-
         if (typingSafetyTimeoutRef.current) clearTimeout(typingSafetyTimeoutRef.current);
         typingSafetyTimeoutRef.current = setTimeout(() => {
           setIsPartnerTyping(false);
@@ -163,7 +181,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
       // Mark all outgoing messages as read
       setMessages((prev) =>
-        prev.map((m) => (m.isFromMe ? { ...m, status: 'read' } : m))
+        prev.map((m) => (isMessageFromCurrentUser(m.senderId, currentUserIdRef.current) ? { ...m, status: 'read' } : m))
       );
     };
 
@@ -222,9 +240,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         cursor: nextCursor,
       });
 
+      const normalizedOlder = (data.messages || []).map((m) => ({
+        ...m,
+        isFromMe: isMessageFromCurrentUser(m.senderId, currentUserIdRef.current),
+      }));
+
       setMessages((prev) => {
         const existingIds = new Set(prev.map((m) => m.id));
-        const uniqueOlder = data.messages.filter((m) => !existingIds.has(m.id));
+        const uniqueOlder = normalizedOlder.filter((m) => !existingIds.has(m.id));
         return [...uniqueOlder, ...prev];
       });
 
@@ -243,16 +266,21 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
     try {
       const createdMessage = await chatService.sendMessage(conversation.conversationId, content);
+      const normalizedMsg: MessageItem = {
+        ...createdMessage,
+        senderId: createdMessage.senderId ?? (currentUserIdRef.current as number),
+        isFromMe: true,
+      };
 
       setMessages((prev) => {
-        if (prev.some((m) => m.id === createdMessage.id)) {
+        if (prev.some((m) => m.id === normalizedMsg.id)) {
           return prev;
         }
-        return [...prev, createdMessage];
+        return [...prev, normalizedMsg];
       });
 
       if (onUpdateConversation) {
-        onUpdateConversation(conversation.conversationId, createdMessage);
+        onUpdateConversation(conversation.conversationId, normalizedMsg);
       }
 
       return true;
@@ -352,6 +380,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         <MessageList
           messages={messages}
           partner={partnerWithLivePresence}
+          currentUserId={currentUserId}
           loading={loading}
           loadingOlder={loadingOlder}
           hasMore={hasMore}

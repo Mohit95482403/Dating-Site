@@ -78,3 +78,23 @@ export const formatNumberSafe = (
   return Number(numInput).toLocaleString();
 };
 
+/**
+ * Safely compares message sender ID with current logged-in user ID.
+ * Returns true if the message was sent by the current user (render on RIGHT).
+ * Returns false if the message was sent by the partner (render on LEFT).
+ */
+export const isMessageFromCurrentUser = (
+  messageSenderId: number | string | undefined | null,
+  currentUserId: number | string | undefined | null
+): boolean => {
+  if (messageSenderId == null || currentUserId == null) return false;
+  const numSender = Number(messageSenderId);
+  const numUser = Number(currentUserId);
+  if (isNaN(numSender) || isNaN(numUser) || numSender <= 0 || numUser <= 0) {
+    const strSender = String(messageSenderId).trim();
+    const strUser = String(currentUserId).trim();
+    return strSender.length > 0 && strSender === strUser;
+  }
+  return numSender === numUser;
+};
+

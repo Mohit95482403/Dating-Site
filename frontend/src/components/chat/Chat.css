@@ -704,10 +704,12 @@
 
 .message-bubble-row.from-me {
   justify-content: flex-end;
+  align-self: flex-end;
 }
 
 .message-bubble-row.from-partner {
   justify-content: flex-start;
+  align-self: flex-start;
 }
 
 @keyframes msg-appear {
