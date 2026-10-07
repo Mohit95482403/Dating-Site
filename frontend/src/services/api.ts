@@ -3,15 +3,38 @@ import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'a
 import type { ApiResponse } from '../types';
 import { API_BASE_URL } from '../config/env';
 
-// In-memory access token storage
-let inMemoryAccessToken: string | null = null;
+const TOKEN_STORAGE_KEY = 'connectly_access_token';
+
+// In-memory access token storage initialized from localStorage
+let inMemoryAccessToken: string | null = (() => {
+  try {
+    return localStorage.getItem(TOKEN_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+})();
 let onAuthFailureCallback: (() => void) | null = null;
 
 export const setAccessToken = (token: string | null): void => {
   inMemoryAccessToken = token;
+  try {
+    if (token) {
+      localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    } else {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+    }
+  } catch {
+    // Ignore storage quota or restricted environment errors
+  }
 };
 
 export const getAccessToken = (): string | null => {
+  if (inMemoryAccessToken) return inMemoryAccessToken;
+  try {
+    inMemoryAccessToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+  } catch {
+    // Ignore storage access errors
+  }
   return inMemoryAccessToken;
 };
 
@@ -31,11 +54,12 @@ export const api: AxiosInstance = axios.create({
   },
 });
 
-// Request Interceptor: Attach in-memory JWT bearer token if present
+// Request Interceptor: Attach JWT bearer token if present
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    if (inMemoryAccessToken && config.headers) {
-      config.headers.Authorization = `Bearer ${inMemoryAccessToken}`;
+    const token = getAccessToken();
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -81,7 +105,7 @@ api.interceptors.response.use(
       url.includes('/auth/register') ||
       url.includes('/auth/refresh') ||
       url.includes('/auth/logout') ||
-      (!inMemoryAccessToken && url.includes('/auth/me'));
+      (!getAccessToken() && url.includes('/auth/me'));
 
     // If 401 Unauthorized and not already retried, and not an auth mutation route
     if (error.response.status === 401 && !originalRequest._retry && !isAuthRoute) {
@@ -129,13 +153,17 @@ api.interceptors.response.use(
         }
 
         return api(originalRequest);
-      } catch (refreshError) {
+      } catch (refreshError: any) {
         processQueue(refreshError, null);
-        setAccessToken(null);
 
-        // Notify AuthContext that session expired
-        if (onAuthFailureCallback) {
-          onAuthFailureCallback();
+        // Only clear token and notify session expiry if the refresh was rejected by server (401/403)
+        const isAuthRejection =
+          refreshError?.response?.status === 401 || refreshError?.response?.status === 403;
+        if (isAuthRejection) {
+          setAccessToken(null);
+          if (onAuthFailureCallback) {
+            onAuthFailureCallback();
+          }
         }
 
         return Promise.reject(refreshError);

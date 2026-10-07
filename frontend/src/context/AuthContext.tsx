@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef, us
 import type { ReactNode, FC } from 'react';
 import type { AuthUser, LoginPayload, RegisterPayload } from '../types/auth';
 import { authService } from '../services/auth.service';
-import { setOnAuthFailure, setAccessToken } from '../services/api';
+import { setOnAuthFailure, setAccessToken, getAccessToken } from '../services/api';
 import { useToast } from './ToastContext';
 import { normalizeApiError } from '../utils/apiError';
 
@@ -52,16 +52,42 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
     const initializeAuth = async () => {
       try {
-        // Silently attempt to restore session via HTTP-only refresh cookie
-        const token = await authService.refresh();
-        if (token && isMounted) {
-          const currentUser = await authService.getCurrentUser();
-          if (isMounted) {
-            setUser(currentUser);
+        // 1. Check if an active access token is already available
+        const existingToken = getAccessToken();
+        if (existingToken) {
+          try {
+            // Verify token validity with backend /api/auth/me
+            const currentUser = await authService.getCurrentUser();
+            if (isMounted && currentUser) {
+              setUser(currentUser);
+              return;
+            }
+          } catch (err: any) {
+            // Token may have expired while tab was closed; attempt refresh below
+            console.warn('[AuthContext] Stored token expired, attempting silent refresh...', err?.message);
           }
         }
+
+        // 2. Silently attempt to restore session via refresh cookie / rotation
+        try {
+          const token = await authService.refresh();
+          if (token && isMounted) {
+            const currentUser = await authService.getCurrentUser();
+            if (isMounted && currentUser) {
+              setUser(currentUser);
+              return;
+            }
+          }
+        } catch {
+          // No active refresh session exists
+        }
+
+        // 3. Guest visitor or session expired
+        if (isMounted) {
+          setUser(null);
+          setAccessToken(null);
+        }
       } catch {
-        // Guest visitor or no active session — stay guest silently with no alerts
         if (isMounted) {
           setUser(null);
           setAccessToken(null);

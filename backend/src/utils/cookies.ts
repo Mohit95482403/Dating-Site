@@ -9,8 +9,9 @@ const getCookieOptions = (): CookieOptions => {
   return {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'strict' : 'lax',
-    path: '/api/auth',
+    // Cross-site cookies between Cloudflare Workers and Render require sameSite='none' with secure=true
+    sameSite: isProduction ? 'none' : 'lax',
+    path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
   };
 };
