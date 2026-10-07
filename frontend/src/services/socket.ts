@@ -1,4 +1,5 @@
 import { io, Socket } from 'socket.io-client';
+import { SOCKET_URL } from '../config/env';
 
 class SocketService {
   private static instance: SocketService;
@@ -6,7 +7,7 @@ class SocketService {
   private socketUrl: string;
 
   private constructor() {
-    this.socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+    this.socketUrl = SOCKET_URL;
   }
 
   public static getInstance(): SocketService {

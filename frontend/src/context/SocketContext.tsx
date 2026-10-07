@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '../hooks/useAuth';
 import { getAccessToken } from '../services/api';
+import { SOCKET_URL } from '../config/env';
 import matchService from '../services/match.service';
 import chatService from '../services/chat.service';
 import notificationService from '../services/notification.service';
@@ -116,7 +117,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     const token = getAccessToken();
-    const serverUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '');
+    const serverUrl = SOCKET_URL;
 
     const newSocket = io(serverUrl, {
       auth: { token },

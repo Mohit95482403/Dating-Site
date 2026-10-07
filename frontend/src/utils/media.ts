@@ -1,3 +1,5 @@
+import { BACKEND_URL } from '../config/env';
+
 /**
  * Resolves a media URL (relative upload path vs absolute web URL)
  * Ensures uploaded photos and videos point to the correct backend origin if relative.
@@ -12,7 +14,7 @@ export const getMediaUrl = (url?: string | null): string => {
   ) {
     return url;
   }
-  const backendOrigin = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+  const backendOrigin = BACKEND_URL;
   return `${backendOrigin}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import type { ApiResponse } from '../types';
+import { API_BASE_URL } from '../config/env';
 
 // In-memory access token storage
 let inMemoryAccessToken: string | null = null;
@@ -18,8 +19,8 @@ export const setOnAuthFailure = (callback: () => void): void => {
   onAuthFailureCallback = callback;
 };
 
-// API Base URL from environment variables or fallback
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// API Base URL from centralized environment config
+const baseURL = API_BASE_URL;
 
 export const api: AxiosInstance = axios.create({
   baseURL,

@@ -23,6 +23,7 @@ import { RejectVerificationModal } from '../../components/admin/RejectVerificati
 import { ConfirmActionModal } from '../../components/admin/ConfirmActionModal';
 import { useToast } from '../../context/ToastContext';
 import { useSocket } from '../../hooks/useSocket';
+import { BACKEND_URL } from '../../config/env';
 
 /**
  * Safely resolves relative or absolute document URL and attaches JWT query token
@@ -34,9 +35,7 @@ export const resolveDocumentUrl = (rawUrl?: string | null): string => {
   let base = rawUrl;
 
   if (!base.startsWith('http://') && !base.startsWith('https://')) {
-    const apiOrigin = import.meta.env.VITE_API_URL
-      ? new URL(import.meta.env.VITE_API_URL).origin
-      : (window.location.port === '5173' ? 'http://localhost:5000' : '');
+    const apiOrigin = BACKEND_URL;
     base = `${apiOrigin}${base.startsWith('/') ? '' : '/'}${base}`;
   }
 
