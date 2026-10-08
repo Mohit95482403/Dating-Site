@@ -78,8 +78,38 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const durationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const currentUserId = user?.id || (user as any)?.userId;
 
+  // Persistent mutable refs to eliminate stale closures in WebRTC callbacks and socket listeners
+  const activeCallRef = useRef<CallRecord | null>(null);
+  const socketRef = useRef<any>(null);
+  const currentUserIdRef = useRef<number | null>(null);
+  const callTypeRef = useRef<CallType>('audio');
+  const callStateRef = useRef<CallUIState>('idle');
+  const hasCreatedOfferRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    activeCallRef.current = activeCall;
+  }, [activeCall]);
+
+  useEffect(() => {
+    socketRef.current = socket;
+  }, [socket]);
+
+  useEffect(() => {
+    currentUserIdRef.current = currentUserId ? Number(currentUserId) : null;
+  }, [currentUserId]);
+
+  useEffect(() => {
+    callTypeRef.current = callType;
+  }, [callType]);
+
+  useEffect(() => {
+    callStateRef.current = callState;
+  }, [callState]);
+
   // Cleanup helper
   const cleanupCall = useCallback(() => {
+    hasCreatedOfferRef.current = false;
+    activeCallRef.current = null;
     if (durationTimerRef.current) {
       clearInterval(durationTimerRef.current);
       durationTimerRef.current = null;
@@ -101,14 +131,16 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setConnectionState('closed');
   }, []);
 
-  // Initialize WebRTC instance on demand
+  // Initialize WebRTC instance on demand with fresh ref access
   const getOrCreateWebRTC = useCallback(() => {
     if (!webrtcRef.current) {
       webrtcRef.current = new WebRTCService({
         onRemoteStream: (stream) => {
+          console.log('[CallContext] Received remote media stream');
           setRemoteStream(stream);
         },
         onConnectionStateChange: (state) => {
+          console.log('[CallContext] WebRTC connection state changed to:', state);
           setConnectionState(state);
           if (state === 'connected') {
             setCallState('connected');
@@ -120,25 +152,30 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         },
         onIceCandidate: (candidate) => {
-          if (socket && activeCall) {
+          const call = activeCallRef.current;
+          const sock = socketRef.current;
+          const myId = currentUserIdRef.current;
+          if (sock && call && call.id) {
             const targetId =
-              activeCall.callerId === currentUserId
-                ? activeCall.receiverId
-                : activeCall.callerId;
-            socket.emit('call:ice-candidate', {
-              callId: activeCall.id,
+              call.callerId === myId
+                ? call.receiverId
+                : call.callerId;
+            console.log(`[WebRTC] Emitting call:ice-candidate for call ${call.id} to target ${targetId}`);
+            sock.emit('call:ice-candidate', {
+              callId: call.id,
               targetUserId: targetId,
               candidate: candidate.toJSON(),
             });
           }
         },
         onError: (err) => {
+          console.error('[WebRTC] WebRTC service error:', err);
           setErrorMessage(err.message);
         },
       });
     }
     return webrtcRef.current;
-  }, [socket, activeCall, currentUserId, cleanupCall, showToast]);
+  }, [cleanupCall, showToast]);
 
   // Start duration timer
   const startDurationTimer = useCallback(() => {
@@ -166,20 +203,23 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      if (callState !== 'idle') {
+      if (callStateRef.current !== 'idle') {
         showToast('You are already on a call.', 'warning');
         return;
       }
 
       setErrorMessage(null);
       setCallType(type);
+      callTypeRef.current = type;
       setPartner(partnerInfo);
       setCallState('calling');
+      hasCreatedOfferRef.current = false;
 
       try {
         const webrtc = getOrCreateWebRTC();
 
         // 1. Acquire local camera / microphone media
+        console.log('[WebRTC] Acquiring local media for outgoing call...');
         const stream = await webrtc.getLocalMedia(type);
         setLocalStream(stream);
 
@@ -197,29 +237,32 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
           conversationId: safeConvId,
         });
 
+        activeCallRef.current = callRecord;
         setActiveCall(callRecord);
 
         // 4. Join Socket.IO call room
-        if (socket && callRecord?.id) {
-          socket.emit('call:join', { callId: callRecord.id });
+        if (socketRef.current && callRecord?.id) {
+          socketRef.current.emit('call:join', { callId: callRecord.id });
         }
       } catch (err: any) {
         const msg = err.response?.data?.message || err.message || 'Failed to initiate call';
+        console.error('[CallContext] Error starting call:', err);
         setErrorMessage(msg);
         showToast(msg, 'error');
         cleanupCall();
       }
     },
-    [callState, getOrCreateWebRTC, socket, cleanupCall, showToast]
+    [getOrCreateWebRTC, cleanupCall, showToast]
   );
 
   /**
    * Accept Incoming Call
    */
   const acceptCall = useCallback(async (): Promise<void> => {
-    if (!activeCall) return;
+    const currentCall = activeCallRef.current;
+    if (!currentCall) return;
 
-    const callId = Number(activeCall.id);
+    const callId = Number(currentCall.id);
     if (!Number.isInteger(callId) || callId <= 0) {
       showToast('Unable to accept call: invalid call ID.', 'error');
       cleanupCall();
@@ -231,29 +274,32 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const webrtc = getOrCreateWebRTC();
 
       // 1. Acquire local media
-      const stream = await webrtc.getLocalMedia(callType);
+      console.log('[WebRTC] Receiver acquiring local media for incoming call...');
+      const stream = await webrtc.getLocalMedia(callTypeRef.current);
       setLocalStream(stream);
 
-      // 2. Initialize PeerConnection
+      // 2. Initialize PeerConnection and attach local tracks
       webrtc.initializePeerConnection();
 
       // 3. Join Socket room
-      if (socket) {
-        socket.emit('call:join', { callId });
+      if (socketRef.current) {
+        socketRef.current.emit('call:join', { callId });
       }
 
       // 4. Confirm acceptance with Backend
       const updated = await callService.acceptCall(callId);
+      activeCallRef.current = updated;
       setActiveCall(updated);
       setCallState('connected');
       startDurationTimer();
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || 'Failed to accept call';
+      console.error('[CallContext] Error accepting call:', err);
       setErrorMessage(msg);
       showToast(msg, 'error');
       cleanupCall();
     }
-  }, [activeCall, callType, getOrCreateWebRTC, socket, startDurationTimer, cleanupCall, showToast]);
+  }, [getOrCreateWebRTC, startDurationTimer, cleanupCall, showToast]);
 
   /**
    * Reject Incoming Call
@@ -385,17 +431,17 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       // If receiver is already in a call, reject or ignore
-      if (callState !== 'idle') {
-        socket.emit('call:busy', { callId: incomingCallId, callerId });
+      if (callStateRef.current !== 'idle') {
+        socketRef.current?.emit('call:busy', { callId: incomingCallId, callerId });
         return;
       }
 
-      setActiveCall({
+      const incomingRecord: CallRecord = {
         id: incomingCallId,
         matchId: Number(data?.matchId || 0),
         conversationId: data?.conversationId ? Number(data.conversationId) : null,
         callerId,
-        receiverId: currentUserId ?? 0,
+        receiverId: currentUserIdRef.current ?? 0,
         callType: data?.callType || 'audio',
         status: 'ringing',
         startedAt: data?.startedAt || new Date().toISOString(),
@@ -403,25 +449,49 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         endedAt: null,
         duration: 0,
         caller: safeCaller,
-      });
+      };
+
+      activeCallRef.current = incomingRecord;
+      setActiveCall(incomingRecord);
       setCallType(data?.callType || 'audio');
+      callTypeRef.current = data?.callType || 'audio';
       setPartner(safeCaller);
       setCallState('incoming');
     };
 
     // 2. Call Accepted (Received by caller)
-    const handleCallAccepted = async (data: { callId: number; call: CallRecord }) => {
-      setActiveCall(data.call);
+    const handleCallAccepted = async (data: any) => {
+      console.log('[WebRTC] Received call:accepted event:', data);
+      const callRecord = (data?.call || data) as CallRecord;
+      const callId = Number(data?.callId || callRecord?.id || activeCallRef.current?.id);
+      const targetUserId = Number(
+        callRecord?.receiverId ||
+        activeCallRef.current?.receiverId ||
+        (activeCallRef.current?.callerId === currentUserIdRef.current
+          ? activeCallRef.current?.receiverId
+          : activeCallRef.current?.callerId)
+      );
+
+      activeCallRef.current = callRecord;
+      setActiveCall(callRecord);
       setCallState('connected');
       startDurationTimer();
 
+      if (hasCreatedOfferRef.current) {
+        console.log('[WebRTC] Offer already initiated for call', callId, '- skipping duplicate');
+        return;
+      }
+      hasCreatedOfferRef.current = true;
+
       // Caller creates and transmits WebRTC SDP Offer
       try {
+        console.log(`[WebRTC] Caller creating offer for callId: ${callId}, targetUserId: ${targetUserId}`);
         const webrtc = getOrCreateWebRTC();
         const offer = await webrtc.createOffer();
-        socket.emit('call:offer', {
-          callId: data.callId,
-          targetUserId: data.call.receiverId,
+        console.log('[WebRTC] Offer created successfully, emitting call:offer');
+        socketRef.current?.emit('call:offer', {
+          callId,
+          targetUserId,
           sdp: offer,
         });
       } catch (err: any) {
@@ -463,11 +533,14 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // 8. WebRTC SDP Offer (Received by callee)
     const handleCallOffer = async (payload: CallSignalPayload) => {
+      console.log('[WebRTC] Received call:offer from senderId:', payload?.senderId);
       try {
         const webrtc = getOrCreateWebRTC();
-        if (payload.sdp) {
+        if (payload?.sdp) {
+          console.log('[WebRTC] Receiver setting remote offer and creating answer');
           const answer = await webrtc.handleOffer(payload.sdp);
-          socket.emit('call:answer', {
+          console.log('[WebRTC] Answer created successfully, emitting call:answer');
+          socketRef.current?.emit('call:answer', {
             callId: payload.callId,
             targetUserId: payload.senderId,
             sdp: answer,
@@ -475,28 +548,35 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (err: any) {
         console.error('[CallContext] Error handling SDP offer:', err);
+        showToast('WebRTC negotiation failed', 'error');
+        cleanupCall();
       }
     };
 
     // 9. WebRTC SDP Answer (Received by caller)
     const handleCallAnswer = async (payload: CallSignalPayload) => {
+      console.log('[WebRTC] Caller received call:answer');
       try {
-        if (webrtcRef.current && payload.sdp) {
+        if (webrtcRef.current && payload?.sdp) {
+          console.log('[WebRTC] Caller setting remote answer');
           await webrtcRef.current.handleAnswer(payload.sdp);
+          console.log('[WebRTC] Caller remote description set successfully');
         }
       } catch (err: any) {
         console.error('[CallContext] Error handling SDP answer:', err);
+        showToast('WebRTC negotiation failed', 'error');
+        cleanupCall();
       }
     };
 
     // 10. WebRTC ICE Candidate
     const handleCallIceCandidate = async (payload: CallSignalPayload) => {
       try {
-        if (webrtcRef.current && payload.candidate) {
+        if (webrtcRef.current && payload?.candidate) {
           await webrtcRef.current.addIceCandidate(payload.candidate);
         }
       } catch (err: any) {
-        console.error('[CallContext] Error adding ICE candidate:', err);
+        console.warn('[CallContext] Error adding ICE candidate:', err);
       }
     };
 
@@ -533,8 +613,6 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [
     socket,
-    callState,
-    currentUserId,
     getOrCreateWebRTC,
     startDurationTimer,
     cleanupCall,

@@ -40,6 +40,9 @@ export class WebRTCService {
           { urls: 'stun:stun.l.google.com:19302' },
           { urls: 'stun:stun1.l.google.com:19302' },
           { urls: 'stun:stun2.l.google.com:19302' },
+          { urls: 'stun:stun3.l.google.com:19302' },
+          { urls: 'stun:stun4.l.google.com:19302' },
+          { urls: 'stun:stun.cloudflare.com:3478' },
         ];
 
     return {
@@ -130,6 +133,7 @@ export class WebRTCService {
 
     // 1. Remote media tracks handler
     pc.ontrack = (event: RTCTrackEvent) => {
+      console.log('[WebRTC] Received remote track:', event.track.kind);
       if (event.streams && event.streams[0]) {
         this.remoteStream = event.streams[0];
       } else if (this.remoteStream) {
@@ -143,6 +147,7 @@ export class WebRTCService {
     // 2. Local ICE candidate generation handler
     pc.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
       if (event.candidate && this.callbacks.onIceCandidate) {
+        console.log('[WebRTC] Generated local ICE candidate:', event.candidate.protocol || 'candidate');
         this.callbacks.onIceCandidate(event.candidate);
       }
     };
@@ -150,6 +155,7 @@ export class WebRTCService {
     // 3. Connection state monitoring
     pc.onconnectionstatechange = () => {
       const state = pc.connectionState as WebRTCConnectionState;
+      console.log(`[WebRTC] Connection state changed: ${state}`);
       if (this.callbacks.onConnectionStateChange) {
         this.callbacks.onConnectionStateChange(state);
       }
@@ -157,19 +163,46 @@ export class WebRTCService {
 
     // 4. ICE connection state handling
     pc.oniceconnectionstatechange = () => {
-      if (pc.iceConnectionState === 'failed') {
+      console.log(`[WebRTC] ICE connection state changed: ${pc.iceConnectionState}`);
+      if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+        if (this.callbacks.onConnectionStateChange) {
+          this.callbacks.onConnectionStateChange('connected');
+        }
+      } else if (pc.iceConnectionState === 'failed') {
+        console.warn('[WebRTC] ICE connection failed, restarting ICE...');
         pc.restartIce();
       }
     };
 
-    // 5. Attach existing local stream tracks
+    // 5. ICE gathering state
+    pc.onicegatheringstatechange = () => {
+      console.log(`[WebRTC] ICE gathering state: ${pc.iceGatheringState}`);
+    };
+
+    // 6. Attach existing local stream tracks
     if (this.localStream) {
       this.localStream.getTracks().forEach((track) => {
         pc.addTrack(track, this.localStream!);
       });
+      console.log(`[WebRTC] Attached ${this.localStream.getTracks().length} local media tracks to PeerConnection`);
     }
 
     return pc;
+  }
+
+  /**
+   * Ensure local tracks are attached to the PeerConnection
+   */
+  private attachLocalTracks(): void {
+    if (!this.peerConnection || !this.localStream) return;
+    const senders = this.peerConnection.getSenders();
+    this.localStream.getTracks().forEach((track) => {
+      const alreadyAttached = senders.some((s) => s.track === track);
+      if (!alreadyAttached) {
+        this.peerConnection!.addTrack(track, this.localStream!);
+        console.log('[WebRTC] Added missing track to PeerConnection:', track.kind);
+      }
+    });
   }
 
   /**
@@ -181,10 +214,14 @@ export class WebRTCService {
     }
     const pc = this.peerConnection!;
 
+    this.attachLocalTracks();
+
+    console.log('[WebRTC] Creating SDP offer...');
     const offer = await pc.createOffer({
       offerToReceiveAudio: true,
       offerToReceiveVideo: true,
     });
+    console.log('[WebRTC] Setting local description (offer)...');
     await pc.setLocalDescription(offer);
 
     return pc.localDescription!;
@@ -199,11 +236,16 @@ export class WebRTCService {
     }
     const pc = this.peerConnection!;
 
+    this.attachLocalTracks();
+
+    console.log('[WebRTC] Setting remote description (offer)...');
     await pc.setRemoteDescription(new RTCSessionDescription(offer));
     this.isRemoteDescriptionSet = true;
     await this.processQueuedIceCandidates();
 
+    console.log('[WebRTC] Creating SDP answer...');
     const answer = await pc.createAnswer();
+    console.log('[WebRTC] Setting local description (answer)...');
     await pc.setLocalDescription(answer);
 
     return pc.localDescription!;
@@ -214,14 +256,18 @@ export class WebRTCService {
    */
   public async handleAnswer(answer: RTCSessionDescriptionInit): Promise<void> {
     if (!this.peerConnection) {
-      throw new Error('PeerConnection not initialized for answer');
+      console.warn('[WebRTC] PeerConnection not initialized for answer');
+      return;
     }
     const pc = this.peerConnection;
 
     if (pc.signalingState !== 'stable') {
+      console.log('[WebRTC] Setting remote description (answer)...');
       await pc.setRemoteDescription(new RTCSessionDescription(answer));
       this.isRemoteDescriptionSet = true;
       await this.processQueuedIceCandidates();
+    } else {
+      console.log('[WebRTC] Signaling state already stable, skipping duplicate answer');
     }
   }
 
@@ -229,7 +275,11 @@ export class WebRTCService {
    * Add ICE candidate received from signaling
    */
   public async addIceCandidate(candidate: RTCIceCandidateInit): Promise<void> {
-    if (!this.peerConnection || !this.isRemoteDescriptionSet) {
+    if (!candidate || (!candidate.candidate && candidate.candidate !== '')) {
+      return;
+    }
+
+    if (!this.peerConnection || !this.isRemoteDescriptionSet || !this.peerConnection.remoteDescription) {
       // Buffer candidate until remote description is established
       this.iceCandidateQueue.push(candidate);
       return;

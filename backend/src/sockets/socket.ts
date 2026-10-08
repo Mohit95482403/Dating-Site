@@ -319,43 +319,64 @@ export const initSocket = (httpServer: HttpServer): SocketIOServer => {
       }
     });
 
-    socket.on('call:offer', async (payload: { callId: number; sdp: any }) => {
+    socket.on('call:offer', async (payload: { callId: number; sdp: any; targetUserId?: number }) => {
       try {
         if (!userId || !payload?.callId) return;
         const callId = Number(payload.callId);
-        socket.to(`call:${callId}`).emit('call:offer', {
+        const data = {
           callId,
           sdp: payload.sdp,
           senderId: userId,
-        });
+        };
+        socket.to(`call:${callId}`).emit('call:offer', data);
+        if (payload.targetUserId && Number.isInteger(Number(payload.targetUserId))) {
+          const room = io?.sockets.adapter.rooms.get(`call:${callId}`);
+          if (!room || room.size <= 1) {
+            emitToUser(Number(payload.targetUserId), 'call:offer', data);
+          }
+        }
       } catch (err) {
         logger.warn('[Socket] Failed to forward call:offer:', err);
       }
     });
 
-    socket.on('call:answer', async (payload: { callId: number; sdp: any }) => {
+    socket.on('call:answer', async (payload: { callId: number; sdp: any; targetUserId?: number }) => {
       try {
         if (!userId || !payload?.callId) return;
         const callId = Number(payload.callId);
-        socket.to(`call:${callId}`).emit('call:answer', {
+        const data = {
           callId,
           sdp: payload.sdp,
           senderId: userId,
-        });
+        };
+        socket.to(`call:${callId}`).emit('call:answer', data);
+        if (payload.targetUserId && Number.isInteger(Number(payload.targetUserId))) {
+          const room = io?.sockets.adapter.rooms.get(`call:${callId}`);
+          if (!room || room.size <= 1) {
+            emitToUser(Number(payload.targetUserId), 'call:answer', data);
+          }
+        }
       } catch (err) {
         logger.warn('[Socket] Failed to forward call:answer:', err);
       }
     });
 
-    socket.on('call:ice-candidate', async (payload: { callId: number; candidate: any }) => {
+    socket.on('call:ice-candidate', async (payload: { callId: number; candidate: any; targetUserId?: number }) => {
       try {
         if (!userId || !payload?.callId) return;
         const callId = Number(payload.callId);
-        socket.to(`call:${callId}`).emit('call:ice-candidate', {
+        const data = {
           callId,
           candidate: payload.candidate,
           senderId: userId,
-        });
+        };
+        socket.to(`call:${callId}`).emit('call:ice-candidate', data);
+        if (payload.targetUserId && Number.isInteger(Number(payload.targetUserId))) {
+          const room = io?.sockets.adapter.rooms.get(`call:${callId}`);
+          if (!room || room.size <= 1) {
+            emitToUser(Number(payload.targetUserId), 'call:ice-candidate', data);
+          }
+        }
       } catch (err) {
         logger.warn('[Socket] Failed to forward call:ice-candidate:', err);
       }
@@ -682,10 +703,15 @@ export const emitCallIncoming = (receiverId: number, call: any): void => {
 };
 
 export const emitCallAccepted = (callId: number, callerId: number, call: any): void => {
-  emitToUser(callerId, 'call:accepted', call);
-  if (io) {
-    io.to(`call:${callId}`).emit('call:accepted', call);
-  }
+  const normCallerId = Number(callerId);
+  if (!Number.isInteger(normCallerId) || normCallerId <= 0) return;
+  const payload = {
+    ...call,
+    id: Number(call?.id || callId),
+    callId: Number(callId || call?.id),
+    call,
+  };
+  emitToUser(normCallerId, 'call:accepted', payload);
 };
 
 export const emitCallRejected = (callId: number, callerId: number): void => {

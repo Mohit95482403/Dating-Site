@@ -39,15 +39,21 @@ export const CallScreen: React.FC = () => {
   useEffect(() => {
     if (localVideoRef.current && localStream) {
       localVideoRef.current.srcObject = localStream;
+      localVideoRef.current.play().catch((err) => {
+        console.warn('[CallScreen] Local video autoplay notice:', err);
+      });
     }
-  }, [localStream]);
+  }, [localStream, isCameraOff]);
 
   // Attach remote stream to remote video element
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream;
+      remoteVideoRef.current.play().catch((err) => {
+        console.warn('[CallScreen] Remote video autoplay notice:', err);
+      });
     }
-  }, [remoteStream]);
+  }, [remoteStream, isRemoteCameraOff, callType]);
 
   if (callState !== 'connected' && callState !== 'reconnecting') {
     return null;
@@ -191,13 +197,17 @@ export const CallScreen: React.FC = () => {
             </div>
           )}
 
-          {/* Hidden audio element for remote stream in audio calls */}
+          {/* Audio element for remote stream in audio calls */}
           {remoteStream && (
-            <video
-              ref={remoteVideoRef}
+            <audio
+              ref={(el) => {
+                if (el && remoteStream && el.srcObject !== remoteStream) {
+                  el.srcObject = remoteStream;
+                  el.play().catch((err) => console.warn('[CallScreen] Remote audio autoplay notice:', err));
+                }
+              }}
               autoPlay
               playsInline
-              style={{ display: 'none' }}
             />
           )}
         </div>
