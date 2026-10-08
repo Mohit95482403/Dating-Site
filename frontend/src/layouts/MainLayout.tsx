@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import AnimatedBackground from '../components/common/AnimatedBackground';
@@ -11,25 +11,36 @@ import CallOverlayContainer from '../components/calling/CallOverlayContainer';
 import PremiumModal from '../components/premium/PremiumModal';
 
 export const MainLayout: React.FC = () => {
+  const location = useLocation();
+
+  // Immersive views (such as chat workspace or focused auth forms) do not display the marketing footer
+  const isImmersiveView =
+    location.pathname.startsWith('/messages') ||
+    location.pathname.startsWith('/admin') ||
+    location.pathname === '/login' ||
+    location.pathname === '/register' ||
+    location.pathname === '/forgot-password' ||
+    location.pathname === '/reset-password';
+
   return (
     <SocketProvider>
       <CallProvider>
         <SubscriptionProvider>
-          <div className="app-layout" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+          <div className="app-layout">
             <AnimatedBackground />
             <Navbar />
             <main className="app-main-content">
               <Suspense
                 fallback={
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-                    <LoadingSpinner size="md" />
+                  <div className="page-suspense-fallback">
+                    <LoadingSpinner size="lg" />
                   </div>
                 }
               >
                 <Outlet />
               </Suspense>
             </main>
-            <Footer />
+            {!isImmersiveView && <Footer />}
           </div>
           <CallOverlayContainer />
           <PremiumModal />

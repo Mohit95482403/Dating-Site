@@ -52,31 +52,58 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   const { startCall, callState } = useCall();
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
+  const resolvePartnerId = (): number | null => {
+    const raw =
+      partner?.id ??
+      (partner as any)?.userId ??
+      (partner as any)?.user_id ??
+      (partner as any)?.partner_id ??
+      (partner as any)?.partnerId;
+    const num = Number(raw);
+    return Number.isInteger(num) && num > 0 ? num : null;
+  };
+
   const handleStartAudioCall = () => {
+    const partnerId = resolvePartnerId();
+    if (!partnerId) {
+      alert('Unable to start audio call: invalid recipient ID.');
+      return;
+    }
+    const safeMatchId = matchId && Number.isInteger(Number(matchId)) ? Number(matchId) : undefined;
+    const safeConvId = conversationId && Number.isInteger(Number(conversationId)) ? Number(conversationId) : undefined;
+
     startCall(
-      partner.id,
+      partnerId,
       'audio',
       {
-        id: partner.id,
-        firstName: partner.firstName,
+        id: partnerId,
+        firstName: partner.firstName || 'Member',
         photoUrl: getMediaUrl((partner as any).avatarUrl || (partner as any).photoUrl || partner.primaryPhoto?.fileUrl),
       },
-      matchId,
-      conversationId
+      safeMatchId,
+      safeConvId
     );
   };
 
   const handleStartVideoCall = () => {
+    const partnerId = resolvePartnerId();
+    if (!partnerId) {
+      alert('Unable to start video call: invalid recipient ID.');
+      return;
+    }
+    const safeMatchId = matchId && Number.isInteger(Number(matchId)) ? Number(matchId) : undefined;
+    const safeConvId = conversationId && Number.isInteger(Number(conversationId)) ? Number(conversationId) : undefined;
+
     startCall(
-      partner.id,
+      partnerId,
       'video',
       {
-        id: partner.id,
-        firstName: partner.firstName,
+        id: partnerId,
+        firstName: partner.firstName || 'Member',
         photoUrl: getMediaUrl((partner as any).avatarUrl || (partner as any).photoUrl || partner.primaryPhoto?.fileUrl),
       },
-      matchId,
-      conversationId
+      safeMatchId,
+      safeConvId
     );
   };
 
@@ -175,7 +202,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         </button>
 
         <Link
-          to={`/profile/${partner.id}`}
+          to={`/profile/${resolvePartnerId() ?? ''}`}
           className="chat-view-profile-btn"
           title="View User Profile"
         >
@@ -183,7 +210,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           <span>Profile</span>
         </Link>
 
-        {conversationId && (
+        {conversationId && Number.isInteger(Number(conversationId)) && Number(conversationId) > 0 && (
           <button
             type="button"
             className="chat-call-btn"
@@ -196,11 +223,11 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         )}
       </div>
 
-      {conversationId && (
+      {conversationId && Number.isInteger(Number(conversationId)) && Number(conversationId) > 0 && (
         <ConversationCallHistoryModal
           isOpen={isHistoryOpen}
           onClose={() => setIsHistoryOpen(false)}
-          conversationId={conversationId}
+          conversationId={Number(conversationId)}
           partnerName={partner.firstName}
         />
       )}

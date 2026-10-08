@@ -45,7 +45,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [subscription, setSubscription] = useState<SubscriptionItem | null>(null);
   const [plans, setPlans] = useState<SubscriptionPlanItem[]>([]);
   const [boostStatus, setBoostStatus] = useState<BoostStatusResult | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(() => Boolean(isAuthenticated));
 
   const [upgradeModalState, setUpgradeModalState] = useState<UpgradeModalState>({
     isOpen: false,
@@ -53,13 +53,18 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const refreshSubscription = useCallback(async () => {
     try {
-      // 1. Fetch public plans unconditionally
-      const plansData = await SubscriptionService.getActivePlans().catch(() => []);
-      if (Array.isArray(plansData) && plansData.length > 0) {
-        setPlans(plansData);
-      }
+      // 1. Fetch public plans in non-blocking background task
+      SubscriptionService.getActivePlans()
+        .then((plansData) => {
+          if (Array.isArray(plansData) && plansData.length > 0) {
+            setPlans(plansData);
+          }
+        })
+        .catch(() => {
+          // Non-blocking fallback
+        });
 
-      // 2. If user is not authenticated, clear user-specific subscription state
+      // 2. If user is not authenticated, clear user-specific subscription state immediately
       if (!isAuthenticated) {
         setEntitlements(null);
         setSubscription(null);

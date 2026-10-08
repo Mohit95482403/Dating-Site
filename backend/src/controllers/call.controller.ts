@@ -11,8 +11,37 @@ export class CallController {
    */
   public static initiateCall = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-      const callerId = Number(req.user?.userId || req.user?.id);
-      const { targetUserId, callType, matchId, conversationId } = req.body;
+      const rawCallerId = req.user?.id ?? req.user?.userId;
+      const callerId = Number(rawCallerId);
+      if (!Number.isInteger(callerId) || callerId <= 0) {
+        ApiResponse.error(res, 'Authentication required with valid user ID', [], HttpStatus.UNAUTHORIZED);
+        return;
+      }
+
+      const rawTargetId =
+        req.body?.targetUserId ??
+        req.body?.receiverId ??
+        req.body?.recipientId ??
+        req.body?.userId;
+      const targetUserId = Number(rawTargetId);
+      if (!Number.isInteger(targetUserId) || targetUserId <= 0) {
+        ApiResponse.error(res, 'Valid recipient user ID is required', [], HttpStatus.BAD_REQUEST);
+        return;
+      }
+
+      const callType = req.body?.callType;
+      if (callType !== 'audio' && callType !== 'video') {
+        ApiResponse.error(res, "callType must be either 'audio' or 'video'", [], HttpStatus.BAD_REQUEST);
+        return;
+      }
+
+      const rawMatchId = req.body?.matchId;
+      const parsedMatchId = rawMatchId != null ? Number(rawMatchId) : undefined;
+      const matchId = parsedMatchId && Number.isInteger(parsedMatchId) && parsedMatchId > 0 ? parsedMatchId : undefined;
+
+      const rawConvId = req.body?.conversationId;
+      const parsedConvId = rawConvId != null ? Number(rawConvId) : undefined;
+      const conversationId = parsedConvId && Number.isInteger(parsedConvId) && parsedConvId > 0 ? parsedConvId : undefined;
 
       const call = await CallService.initiateCall(callerId, {
         targetUserId,
@@ -34,8 +63,17 @@ export class CallController {
    */
   public static acceptCall = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-      const receiverId = Number(req.user?.userId || req.user?.id);
+      const receiverId = Number(req.user?.id ?? req.user?.userId);
+      if (!Number.isInteger(receiverId) || receiverId <= 0) {
+        ApiResponse.error(res, 'Authentication required with valid user ID', [], HttpStatus.UNAUTHORIZED);
+        return;
+      }
+
       const callId = Number(req.params.callId);
+      if (!Number.isInteger(callId) || callId <= 0) {
+        ApiResponse.error(res, 'Valid call ID is required', [], HttpStatus.BAD_REQUEST);
+        return;
+      }
 
       const call = await CallService.acceptCall(callId, receiverId);
       ApiResponse.success(res, 'Call accepted successfully', call, HttpStatus.OK);
@@ -51,8 +89,17 @@ export class CallController {
    */
   public static rejectCall = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-      const receiverId = Number(req.user?.userId || req.user?.id);
+      const receiverId = Number(req.user?.id ?? req.user?.userId);
+      if (!Number.isInteger(receiverId) || receiverId <= 0) {
+        ApiResponse.error(res, 'Authentication required with valid user ID', [], HttpStatus.UNAUTHORIZED);
+        return;
+      }
+
       const callId = Number(req.params.callId);
+      if (!Number.isInteger(callId) || callId <= 0) {
+        ApiResponse.error(res, 'Valid call ID is required', [], HttpStatus.BAD_REQUEST);
+        return;
+      }
 
       const call = await CallService.rejectCall(callId, receiverId);
       ApiResponse.success(res, 'Call rejected', call, HttpStatus.OK);
@@ -68,8 +115,17 @@ export class CallController {
    */
   public static cancelCall = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-      const callerId = Number(req.user?.userId || req.user?.id);
+      const callerId = Number(req.user?.id ?? req.user?.userId);
+      if (!Number.isInteger(callerId) || callerId <= 0) {
+        ApiResponse.error(res, 'Authentication required with valid user ID', [], HttpStatus.UNAUTHORIZED);
+        return;
+      }
+
       const callId = Number(req.params.callId);
+      if (!Number.isInteger(callId) || callId <= 0) {
+        ApiResponse.error(res, 'Valid call ID is required', [], HttpStatus.BAD_REQUEST);
+        return;
+      }
 
       const call = await CallService.cancelCall(callId, callerId);
       ApiResponse.success(res, 'Call cancelled', call, HttpStatus.OK);
@@ -85,8 +141,17 @@ export class CallController {
    */
   public static endCall = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-      const userId = Number(req.user?.userId || req.user?.id);
+      const userId = Number(req.user?.id ?? req.user?.userId);
+      if (!Number.isInteger(userId) || userId <= 0) {
+        ApiResponse.error(res, 'Authentication required with valid user ID', [], HttpStatus.UNAUTHORIZED);
+        return;
+      }
+
       const callId = Number(req.params.callId);
+      if (!Number.isInteger(callId) || callId <= 0) {
+        ApiResponse.error(res, 'Valid call ID is required', [], HttpStatus.BAD_REQUEST);
+        return;
+      }
 
       const call = await CallService.endCall(callId, userId);
       ApiResponse.success(res, 'Call ended', call, HttpStatus.OK);
@@ -102,8 +167,17 @@ export class CallController {
    */
   public static getCallById = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-      const userId = Number(req.user?.userId || req.user?.id);
+      const userId = Number(req.user?.id ?? req.user?.userId);
+      if (!Number.isInteger(userId) || userId <= 0) {
+        ApiResponse.error(res, 'Authentication required with valid user ID', [], HttpStatus.UNAUTHORIZED);
+        return;
+      }
+
       const callId = Number(req.params.callId);
+      if (!Number.isInteger(callId) || callId <= 0) {
+        ApiResponse.error(res, 'Valid call ID is required', [], HttpStatus.BAD_REQUEST);
+        return;
+      }
 
       const call = await CallService.getCallById(callId, userId);
       ApiResponse.success(res, 'Call details retrieved', call, HttpStatus.OK);
@@ -119,7 +193,12 @@ export class CallController {
    */
   public static getUserCallHistory = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-      const userId = Number(req.user?.userId || req.user?.id);
+      const userId = Number(req.user?.id ?? req.user?.userId);
+      if (!Number.isInteger(userId) || userId <= 0) {
+        ApiResponse.error(res, 'Authentication required with valid user ID', [], HttpStatus.UNAUTHORIZED);
+        return;
+      }
+
       const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 30));
       const offset = Math.max(0, Number(req.query.offset) || 0);
 
@@ -140,8 +219,17 @@ export class CallController {
     res: Response
   ): Promise<void> => {
     try {
-      const userId = Number(req.user?.userId || req.user?.id);
+      const userId = Number(req.user?.id ?? req.user?.userId);
+      if (!Number.isInteger(userId) || userId <= 0) {
+        ApiResponse.error(res, 'Authentication required with valid user ID', [], HttpStatus.UNAUTHORIZED);
+        return;
+      }
+
       const conversationId = Number(req.params.conversationId);
+      if (!Number.isInteger(conversationId) || conversationId <= 0) {
+        ApiResponse.error(res, 'Valid conversation ID is required', [], HttpStatus.BAD_REQUEST);
+        return;
+      }
 
       const history = await CallService.getConversationCallHistory(conversationId, userId);
       ApiResponse.success(res, 'Conversation call history retrieved', history, HttpStatus.OK);

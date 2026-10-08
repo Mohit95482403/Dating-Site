@@ -671,7 +671,14 @@ export const emitAccountStatus = (userId: number, status: string, message: strin
  * Day 19: WebRTC Calling Emitters
  */
 export const emitCallIncoming = (receiverId: number, call: any): void => {
-  emitToUser(receiverId, 'call:incoming', call);
+  const normReceiverId = Number(receiverId);
+  if (!Number.isInteger(normReceiverId) || normReceiverId <= 0) return;
+  const payload = {
+    ...call,
+    id: Number(call?.id || call?.callId),
+    callId: Number(call?.callId || call?.id),
+  };
+  emitToUser(normReceiverId, 'call:incoming', payload);
 };
 
 export const emitCallAccepted = (callId: number, callerId: number, call: any): void => {

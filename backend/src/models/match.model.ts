@@ -14,6 +14,10 @@ export class MatchModel {
     userB: number,
     conn?: PoolConnection
   ): Promise<MatchRow | null> {
+    if (!Number.isInteger(userA) || !Number.isInteger(userB) || userA <= 0 || userB <= 0) {
+      return null;
+    }
+
     const userOne = Math.min(userA, userB);
     const userTwo = Math.max(userA, userB);
 
@@ -51,6 +55,10 @@ export class MatchModel {
     userB: number,
     conn?: PoolConnection
   ): Promise<number> {
+    if (!Number.isInteger(userA) || !Number.isInteger(userB) || userA <= 0 || userB <= 0) {
+      throw new Error('Valid positive user IDs are required to create a match');
+    }
+
     const userOne = Math.min(userA, userB);
     const userTwo = Math.max(userA, userB);
 
@@ -121,6 +129,10 @@ export class MatchModel {
    * Find all active matches for a user with the other user's profile and primary photo
    */
   public static async findUserMatches(userId: number): Promise<UserMatchItem[]> {
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return [];
+    }
+
     const sql = `
       SELECT 
         m.id AS match_id,
@@ -201,6 +213,10 @@ export class MatchModel {
     matchId: number,
     userId?: number
   ): Promise<UserMatchItem | null> {
+    if (!Number.isInteger(matchId) || matchId <= 0) {
+      return null;
+    }
+
     let sql = `
       SELECT 
         m.id AS match_id,

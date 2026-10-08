@@ -97,10 +97,14 @@ export class CallModel {
   }): Promise<number> {
     const { matchId, conversationId = null, callerId, receiverId, callType } = params;
 
+    if (!Number.isInteger(matchId) || !Number.isInteger(callerId) || !Number.isInteger(receiverId) || matchId <= 0 || callerId <= 0 || receiverId <= 0) {
+      throw new Error('Valid integer matchId, callerId, and receiverId required');
+    }
+
     const res = await execute(
       `INSERT INTO calls (match_id, conversation_id, caller_id, receiver_id, call_type, status, started_at)
        VALUES (?, ?, ?, ?, ?, 'ringing', CURRENT_TIMESTAMP)`,
-      [matchId, conversationId || null, callerId, receiverId, callType]
+      [matchId, conversationId && Number.isInteger(conversationId) && conversationId > 0 ? conversationId : null, callerId, receiverId, callType]
     );
 
     return res.insertId;
@@ -110,6 +114,9 @@ export class CallModel {
    * Find call by primary ID
    */
   public static async findById(callId: number, currentUserId?: number): Promise<CallRecord | null> {
+    if (!Number.isInteger(callId) || callId <= 0) {
+      return null;
+    }
     const sql = `${this.baseSelectSql()} WHERE c.id = ? LIMIT 1`;
     const rows = await query<RowDataPacket[]>(sql, [callId]);
     if (!rows || rows.length === 0) return null;
@@ -120,6 +127,9 @@ export class CallModel {
    * Find any currently active call ('ringing' or 'accepted') involving a user
    */
   public static async findActiveCallForUser(userId: number): Promise<CallRecord | null> {
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return null;
+    }
     const sql = `
       ${this.baseSelectSql()} 
       WHERE (c.caller_id = ? OR c.receiver_id = ?) 
@@ -140,6 +150,10 @@ export class CallModel {
     status: CallStatus,
     extra?: { answeredAt?: Date; endedAt?: Date; duration?: number }
   ): Promise<boolean> {
+    if (!Number.isInteger(callId) || callId <= 0) {
+      return false;
+    }
+
     if (status === 'accepted' && extra?.answeredAt === undefined) {
       const sql = `UPDATE calls SET status = 'accepted', answered_at = CURRENT_TIMESTAMP() WHERE id = ?`;
       const res = await execute(sql, [callId]);
@@ -188,13 +202,18 @@ export class CallModel {
     limit = 30,
     offset = 0
   ): Promise<CallRecord[]> {
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return [];
+    }
+    const safeLimit = Math.max(1, Math.min(100, Number(limit) || 30));
+    const safeOffset = Math.max(0, Number(offset) || 0);
     const sql = `
       ${this.baseSelectSql()}
       WHERE c.caller_id = ? OR c.receiver_id = ?
       ORDER BY c.started_at DESC
       LIMIT ? OFFSET ?
     `;
-    const rows = await query<RowDataPacket[]>(sql, [userId, userId, limit, offset]);
+    const rows = await query<RowDataPacket[]>(sql, [userId, userId, safeLimit, safeOffset]);
     return rows.map((r) => this.mapRow(r, userId));
   }
 
@@ -206,13 +225,17 @@ export class CallModel {
     limit = 20,
     currentUserId?: number
   ): Promise<CallRecord[]> {
+    if (!Number.isInteger(conversationId) || conversationId <= 0) {
+      return [];
+    }
+    const safeLimit = Math.max(1, Math.min(100, Number(limit) || 20));
     const sql = `
       ${this.baseSelectSql()}
       WHERE c.conversation_id = ?
       ORDER BY c.started_at DESC
       LIMIT ?
     `;
-    const rows = await query<RowDataPacket[]>(sql, [conversationId, limit]);
+    const rows = await query<RowDataPacket[]>(sql, [conversationId, safeLimit]);
     return rows.map((r) => this.mapRow(r, currentUserId));
   }
 

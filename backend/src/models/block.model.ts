@@ -78,6 +78,9 @@ export class BlockModel {
    * Check if a mutual or unilateral block exists between two users
    */
   public static async isBlocked(userA: number, userB: number): Promise<boolean> {
+    if (!Number.isInteger(userA) || !Number.isInteger(userB) || userA <= 0 || userB <= 0) {
+      return false;
+    }
     const rows = await query<RowDataPacket[]>(
       `SELECT id FROM blocks 
        WHERE (blocker_id = ? AND blocked_user_id = ?) 

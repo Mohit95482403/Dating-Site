@@ -6,10 +6,27 @@ import PublicRoute from './PublicRoute';
 import AdminRoute from './AdminRoute';
 import AdminLayout from '../layouts/AdminLayout';
 import RouteErrorBoundary from '../components/common/RouteErrorBoundary';
+import LandingPage from '../pages/LandingPage';
+import { useAuth } from '../hooks/useAuth';
+import AuthLoadingScreen from '../components/common/AuthLoadingScreen';
 
+// Root route resolver: avoids flashing landing page to authenticated users or flashing half-loaded state
+const RootIndexRoute: React.FC = () => {
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <AuthLoadingScreen message="Connecting to your experience..." />;
+  }
+
+  if (isAuthenticated) {
+    const dest = user?.isProfileComplete === false ? '/onboarding' : '/dashboard';
+    return <Navigate to={dest} replace />;
+  }
+
+  return <LandingPage />;
+};
 
 // Lazy Loaded Pages
-const LandingPage = lazy(() => import('../pages/LandingPage'));
 const LoginPage = lazy(() => import('../pages/LoginPage'));
 const RegisterPage = lazy(() => import('../pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('../pages/ForgotPasswordPage'));
@@ -71,7 +88,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <LandingPage />,
+        element: <RootIndexRoute />,
       },
       // Public-only Auth Routes (redirects authenticated users to /dashboard or /onboarding)
       {

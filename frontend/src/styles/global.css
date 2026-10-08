@@ -498,3 +498,37 @@ img, svg {
   overflow: hidden;
 }
 
+/* ==========================================================================
+   APPLICATION SHELL & MAIN CONTENT LAYOUT
+   ========================================================================== */
+
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  position: relative;
+  background-color: var(--bg-primary);
+}
+
+.app-main-content {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: calc(100vh - 72px);
+  position: relative;
+  box-sizing: border-box;
+}
+
+.page-suspense-fallback {
+  flex: 1 0 auto;
+  min-height: calc(100vh - 72px);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+

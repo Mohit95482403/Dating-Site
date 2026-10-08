@@ -160,6 +160,12 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       matchId?: number,
       conversationId?: number
     ): Promise<void> => {
+      const validTargetUserId = Number(targetUserId);
+      if (!Number.isInteger(validTargetUserId) || validTargetUserId <= 0) {
+        showToast('Unable to start call. Invalid recipient ID.', 'error');
+        return;
+      }
+
       if (callState !== 'idle') {
         showToast('You are already on a call.', 'warning');
         return;
@@ -181,17 +187,20 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         webrtc.initializePeerConnection();
 
         // 3. Create call record via Backend API
+        const safeMatchId = matchId && Number.isInteger(Number(matchId)) ? Number(matchId) : undefined;
+        const safeConvId = conversationId && Number.isInteger(Number(conversationId)) ? Number(conversationId) : undefined;
+
         const callRecord = await callService.initiateCall({
-          targetUserId,
+          targetUserId: validTargetUserId,
           callType: type,
-          matchId,
-          conversationId,
+          matchId: safeMatchId,
+          conversationId: safeConvId,
         });
 
         setActiveCall(callRecord);
 
         // 4. Join Socket.IO call room
-        if (socket) {
+        if (socket && callRecord?.id) {
           socket.emit('call:join', { callId: callRecord.id });
         }
       } catch (err: any) {
@@ -210,6 +219,13 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const acceptCall = useCallback(async (): Promise<void> => {
     if (!activeCall) return;
 
+    const callId = Number(activeCall.id);
+    if (!Number.isInteger(callId) || callId <= 0) {
+      showToast('Unable to accept call: invalid call ID.', 'error');
+      cleanupCall();
+      return;
+    }
+
     setErrorMessage(null);
     try {
       const webrtc = getOrCreateWebRTC();
@@ -223,11 +239,11 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // 3. Join Socket room
       if (socket) {
-        socket.emit('call:join', { callId: activeCall.id });
+        socket.emit('call:join', { callId });
       }
 
       // 4. Confirm acceptance with Backend
-      const updated = await callService.acceptCall(activeCall.id);
+      const updated = await callService.acceptCall(callId);
       setActiveCall(updated);
       setCallState('connected');
       startDurationTimer();
@@ -244,8 +260,13 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
    */
   const rejectCall = useCallback(async (): Promise<void> => {
     if (!activeCall) return;
+    const callId = Number(activeCall.id);
+    if (!Number.isInteger(callId) || callId <= 0) {
+      cleanupCall();
+      return;
+    }
     try {
-      await callService.rejectCall(activeCall.id);
+      await callService.rejectCall(callId);
     } catch {
       // ignore
     } finally {
@@ -261,8 +282,13 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       cleanupCall();
       return;
     }
+    const callId = Number(activeCall.id);
+    if (!Number.isInteger(callId) || callId <= 0) {
+      cleanupCall();
+      return;
+    }
     try {
-      await callService.cancelCall(activeCall.id);
+      await callService.cancelCall(callId);
     } catch {
       // ignore
     } finally {
@@ -278,8 +304,13 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       cleanupCall();
       return;
     }
+    const callId = Number(activeCall.id);
+    if (!Number.isInteger(callId) || callId <= 0) {
+      cleanupCall();
+      return;
+    }
     try {
-      await callService.endCall(activeCall.id);
+      await callService.endCall(callId);
     } catch {
       // ignore
     } finally {
@@ -340,36 +371,41 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!socket) return;
 
     // 1. Incoming Call
-    const handleCallIncoming = (data: {
-      callId: number;
-      callerId: number;
-      caller: CallParticipant;
-      callType: CallType;
-      matchId: number;
-      conversationId: number | null;
-    }) => {
+    const handleCallIncoming = (data: any) => {
+      const incomingCallId = Number(data?.callId || data?.id);
+      if (!Number.isInteger(incomingCallId) || incomingCallId <= 0) {
+        console.error('[CallContext] Invalid incoming call payload:', data);
+        return;
+      }
+
+      const callerId = Number(data?.callerId || data?.caller?.id);
+      const safeCaller: CallParticipant = data?.caller || {
+        id: callerId,
+        firstName: 'Caller',
+      };
+
       // If receiver is already in a call, reject or ignore
       if (callState !== 'idle') {
-        socket.emit('call:busy', { callId: data.callId, callerId: data.callerId });
+        socket.emit('call:busy', { callId: incomingCallId, callerId });
         return;
       }
 
       setActiveCall({
-        id: data.callId,
-        matchId: data.matchId,
-        conversationId: data.conversationId,
-        callerId: data.callerId,
-        receiverId: currentUserId,
-        callType: data.callType,
+        id: incomingCallId,
+        matchId: Number(data?.matchId || 0),
+        conversationId: data?.conversationId ? Number(data.conversationId) : null,
+        callerId,
+        receiverId: currentUserId ?? 0,
+        callType: data?.callType || 'audio',
         status: 'ringing',
-        startedAt: new Date().toISOString(),
+        startedAt: data?.startedAt || new Date().toISOString(),
         answeredAt: null,
         endedAt: null,
         duration: 0,
-        caller: data.caller,
+        caller: safeCaller,
       });
-      setCallType(data.callType);
-      setPartner(data.caller);
+      setCallType(data?.callType || 'audio');
+      setPartner(safeCaller);
       setCallState('incoming');
     };
 

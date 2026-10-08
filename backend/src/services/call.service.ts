@@ -37,10 +37,14 @@ export class CallService {
     const { targetUserId, callType } = input;
 
     // 1. Basic validation
-    if (!targetUserId || isNaN(Number(targetUserId))) {
-      throw new AppError('Valid targetUserId is required', HttpStatus.BAD_REQUEST);
+    if (!Number.isInteger(callerId) || callerId <= 0) {
+      throw new AppError('Valid caller ID is required', HttpStatus.UNAUTHORIZED);
     }
+
     const receiverId = Number(targetUserId);
+    if (!Number.isInteger(receiverId) || receiverId <= 0) {
+      throw new AppError('Valid recipient user ID is required', HttpStatus.BAD_REQUEST);
+    }
 
     if (callerId === receiverId) {
       throw new AppError('You cannot call your own account', HttpStatus.BAD_REQUEST);
@@ -144,6 +148,13 @@ export class CallService {
    * Receiver accepts the incoming call
    */
   public static async acceptCall(callId: number, receiverId: number): Promise<CallRecord> {
+    if (!Number.isInteger(callId) || callId <= 0) {
+      throw new AppError('Valid call ID is required', HttpStatus.BAD_REQUEST);
+    }
+    if (!Number.isInteger(receiverId) || receiverId <= 0) {
+      throw new AppError('Valid receiver ID is required', HttpStatus.BAD_REQUEST);
+    }
+
     const call = await CallModel.findById(callId);
     if (!call) {
       throw new AppError('Call not found', HttpStatus.NOT_FOUND);
@@ -181,6 +192,13 @@ export class CallService {
    * Receiver rejects the incoming call
    */
   public static async rejectCall(callId: number, receiverId: number): Promise<CallRecord> {
+    if (!Number.isInteger(callId) || callId <= 0) {
+      throw new AppError('Valid call ID is required', HttpStatus.BAD_REQUEST);
+    }
+    if (!Number.isInteger(receiverId) || receiverId <= 0) {
+      throw new AppError('Valid receiver ID is required', HttpStatus.BAD_REQUEST);
+    }
+
     const call = await CallModel.findById(callId);
     if (!call) {
       throw new AppError('Call not found', HttpStatus.NOT_FOUND);
@@ -215,6 +233,13 @@ export class CallService {
    * Caller cancels the call while still ringing
    */
   public static async cancelCall(callId: number, callerId: number): Promise<CallRecord> {
+    if (!Number.isInteger(callId) || callId <= 0) {
+      throw new AppError('Valid call ID is required', HttpStatus.BAD_REQUEST);
+    }
+    if (!Number.isInteger(callerId) || callerId <= 0) {
+      throw new AppError('Valid caller ID is required', HttpStatus.BAD_REQUEST);
+    }
+
     const call = await CallModel.findById(callId);
     if (!call) {
       throw new AppError('Call not found', HttpStatus.NOT_FOUND);
@@ -249,6 +274,13 @@ export class CallService {
    * End an active call (either participant can terminate)
    */
   public static async endCall(callId: number, userId: number): Promise<CallRecord> {
+    if (!Number.isInteger(callId) || callId <= 0) {
+      throw new AppError('Valid call ID is required', HttpStatus.BAD_REQUEST);
+    }
+    if (!Number.isInteger(userId) || userId <= 0) {
+      throw new AppError('Valid user ID is required', HttpStatus.BAD_REQUEST);
+    }
+
     const call = await CallModel.findById(callId);
     if (!call) {
       throw new AppError('Call not found', HttpStatus.NOT_FOUND);
@@ -283,6 +315,13 @@ export class CallService {
    * Retrieve single call details by ID
    */
   public static async getCallById(callId: number, userId: number): Promise<CallRecord> {
+    if (!Number.isInteger(callId) || callId <= 0) {
+      throw new AppError('Valid call ID is required', HttpStatus.BAD_REQUEST);
+    }
+    if (!Number.isInteger(userId) || userId <= 0) {
+      throw new AppError('Valid user ID is required', HttpStatus.BAD_REQUEST);
+    }
+
     const call = await CallModel.findById(callId, userId);
     if (!call) {
       throw new AppError('Call record not found', HttpStatus.NOT_FOUND);
@@ -303,6 +342,9 @@ export class CallService {
     limit = 30,
     offset = 0
   ): Promise<CallRecord[]> {
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return [];
+    }
     return CallModel.getCallsForUser(userId, limit, offset);
   }
 
@@ -313,6 +355,13 @@ export class CallService {
     conversationId: number,
     userId: number
   ): Promise<CallRecord[]> {
+    if (!Number.isInteger(conversationId) || conversationId <= 0) {
+      throw new AppError('Valid conversation ID is required', HttpStatus.BAD_REQUEST);
+    }
+    if (!Number.isInteger(userId) || userId <= 0) {
+      throw new AppError('Valid user ID is required', HttpStatus.BAD_REQUEST);
+    }
+
     // Verify membership in conversation
     const isMember = await ConversationModel.isMember(conversationId, userId);
     if (!isMember) {

@@ -3,7 +3,10 @@ import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'a
 import type { ApiResponse } from '../types';
 import { API_BASE_URL } from '../config/env';
 
+import type { AuthUser } from '../types/auth';
+
 const TOKEN_STORAGE_KEY = 'connectly_access_token';
+const USER_STORAGE_KEY = 'connectly_user';
 
 // In-memory access token storage initialized from localStorage
 let inMemoryAccessToken: string | null = (() => {
@@ -13,6 +16,17 @@ let inMemoryAccessToken: string | null = (() => {
     return null;
   }
 })();
+
+// In-memory user storage safely initialized from localStorage
+let inMemoryUser: AuthUser | null = (() => {
+  try {
+    const raw = localStorage.getItem(USER_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as AuthUser) : null;
+  } catch {
+    return null;
+  }
+})();
+
 let onAuthFailureCallback: (() => void) | null = null;
 
 export const setAccessToken = (token: string | null): void => {
@@ -36,6 +50,30 @@ export const getAccessToken = (): string | null => {
     // Ignore storage access errors
   }
   return inMemoryAccessToken;
+};
+
+export const setStoredUser = (user: AuthUser | null): void => {
+  inMemoryUser = user;
+  try {
+    if (user) {
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(USER_STORAGE_KEY);
+    }
+  } catch {
+    // Ignore storage quota or access errors
+  }
+};
+
+export const getStoredUser = (): AuthUser | null => {
+  if (inMemoryUser) return inMemoryUser;
+  try {
+    const raw = localStorage.getItem(USER_STORAGE_KEY);
+    inMemoryUser = raw ? (JSON.parse(raw) as AuthUser) : null;
+  } catch {
+    inMemoryUser = null;
+  }
+  return inMemoryUser;
 };
 
 export const setOnAuthFailure = (callback: () => void): void => {

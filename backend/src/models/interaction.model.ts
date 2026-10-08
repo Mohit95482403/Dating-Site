@@ -170,6 +170,10 @@ export class InteractionModel {
     userB: number,
     conn?: PoolConnection
   ): Promise<number | null> {
+    if (!Number.isInteger(userA) || !Number.isInteger(userB) || userA <= 0 || userB <= 0) {
+      return null;
+    }
+
     const userOne = Math.min(userA, userB);
     const userTwo = Math.max(userA, userB);
 

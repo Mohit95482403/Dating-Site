@@ -44,10 +44,21 @@ const isTransientConnError = (err: any): boolean => {
   );
 };
 
+const validateParams = (sql: string, params?: any[]): void => {
+  if (params && Array.isArray(params)) {
+    for (const p of params) {
+      if (typeof p === 'number' && Number.isNaN(p)) {
+        throw new Error(`[Database Safety Guard] Query attempted with NaN parameter: ${sql}`);
+      }
+    }
+  }
+};
+
 /**
  * Execute a parameterized SELECT query returning typed row arrays with resilient connection retry
  */
 export async function query<T = RowDataPacket[]>(sql: string, params?: any[]): Promise<T> {
+  validateParams(sql, params);
   try {
     const [rows] = await pool.query(sql, params);
     return rows as unknown as T;
@@ -65,6 +76,7 @@ export async function query<T = RowDataPacket[]>(sql: string, params?: any[]): P
  * Execute a parameterized INSERT/UPDATE/DELETE query returning execution metadata with resilient connection retry
  */
 export async function execute(sql: string, params?: any[]): Promise<ResultSetHeader> {
+  validateParams(sql, params);
   try {
     const [result] = await pool.execute<ResultSetHeader>(sql, params);
     return result;

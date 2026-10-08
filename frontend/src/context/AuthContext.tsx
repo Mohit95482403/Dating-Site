@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef, us
 import type { ReactNode, FC } from 'react';
 import type { AuthUser, LoginPayload, RegisterPayload } from '../types/auth';
 import { authService } from '../services/auth.service';
-import { setOnAuthFailure, setAccessToken, getAccessToken } from '../services/api';
+import { setOnAuthFailure, setAccessToken, getAccessToken, getStoredUser, setStoredUser } from '../services/api';
 import { useToast } from './ToastContext';
 import { normalizeApiError } from '../utils/apiError';
 
@@ -20,8 +20,16 @@ export interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // Synchronous session initialization:
+  // If an access token and cached user exist, restore them immediately on frame 0
+  const initialToken = getAccessToken();
+  const initialCachedUser = initialToken ? getStoredUser() : null;
+
+  const [user, setUser] = useState<AuthUser | null>(initialCachedUser);
+  // Only enter loading state if we have a token that needs validation without a cached user
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    return Boolean(initialToken && !initialCachedUser);
+  });
   const [, startTransition] = useTransition();
   const toast = useToast();
 
@@ -38,6 +46,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     startTransition(() => {
       setUser(null);
       setAccessToken(null);
+      setStoredUser(null);
+      setIsLoading(false);
     });
   }, [toast]);
 
@@ -51,51 +61,54 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     let isMounted = true;
 
     const initializeAuth = async () => {
-      try {
-        // 1. Check if an active access token is already available
-        const existingToken = getAccessToken();
-        if (existingToken) {
-          try {
-            // Verify token validity with backend /api/auth/me
-            const currentUser = await authService.getCurrentUser();
-            if (isMounted && currentUser) {
-              setUser(currentUser);
-              return;
-            }
-          } catch (err: any) {
-            // Token may have expired while tab was closed; attempt refresh below
-            console.warn('[AuthContext] Stored token expired, attempting silent refresh...', err?.message);
-          }
-        }
+      const existingToken = getAccessToken();
 
-        // 2. Silently attempt to restore session via refresh cookie / rotation
+      // Case 1: Visitor has NO token in storage — they are a guest!
+      // Settle auth immediately in 0ms without sending a blocking /refresh request to Render
+      if (!existingToken) {
+        if (isMounted) {
+          setUser(null);
+          setStoredUser(null);
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      // Case 2: Visitor has an existing access token in storage
+      try {
+        // Verify token validity with backend /api/auth/me
+        const currentUser = await authService.getCurrentUser();
+        if (isMounted && currentUser) {
+          setUser(currentUser);
+          setStoredUser(currentUser);
+          setIsLoading(false);
+          return;
+        }
+      } catch (err: any) {
+        // Token may have expired while tab was closed; attempt silent refresh only if token existed
+        console.warn('[AuthContext] Stored token expired, attempting silent refresh...', err?.message);
         try {
-          const token = await authService.refresh();
-          if (token && isMounted) {
+          const newToken = await authService.refresh();
+          if (newToken && isMounted) {
             const currentUser = await authService.getCurrentUser();
             if (isMounted && currentUser) {
               setUser(currentUser);
+              setStoredUser(currentUser);
+              setIsLoading(false);
               return;
             }
           }
         } catch {
-          // No active refresh session exists
+          // Refresh session expired or invalid
         }
+      }
 
-        // 3. Guest visitor or session expired
-        if (isMounted) {
-          setUser(null);
-          setAccessToken(null);
-        }
-      } catch {
-        if (isMounted) {
-          setUser(null);
-          setAccessToken(null);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+      // Session could not be validated or refreshed: clear state
+      if (isMounted) {
+        setUser(null);
+        setAccessToken(null);
+        setStoredUser(null);
+        setIsLoading(false);
       }
     };
 
@@ -113,6 +126,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     try {
       const { user: loggedInUser } = await authService.login(payload);
       setUser(loggedInUser);
+      setStoredUser(loggedInUser);
+      setIsLoading(false);
       toast.success(`Welcome back, ${loggedInUser.firstName || 'there'}!`);
       return loggedInUser;
     } catch (error) {
@@ -128,6 +143,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     try {
       const { user: registeredUser } = await authService.register(payload);
       setUser(registeredUser);
+      setStoredUser(registeredUser);
+      setIsLoading(false);
       toast.success('Registration successful! Welcome to Connectly.');
       return registeredUser;
     } catch (error) {
@@ -147,6 +164,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     } finally {
       setUser(null);
       setAccessToken(null);
+      setStoredUser(null);
+      setIsLoading(false);
       toast.info('You have been logged out.');
     }
   }, [toast]);
@@ -162,6 +181,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     } finally {
       setUser(null);
       setAccessToken(null);
+      setStoredUser(null);
+      setIsLoading(false);
       toast.info('Logged out from all devices.');
     }
   }, [toast]);
@@ -173,6 +194,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     try {
       const updatedUser = await authService.getCurrentUser();
       setUser(updatedUser);
+      setStoredUser(updatedUser);
     } catch (error) {
       const normalized = normalizeApiError(error);
       throw normalized;

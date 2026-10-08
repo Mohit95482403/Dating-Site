@@ -25,11 +25,12 @@ export const ConversationCallHistoryModal: React.FC<ConversationCallHistoryModal
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isOpen && conversationId) {
+    const validConvId = Number(conversationId);
+    if (isOpen && Number.isInteger(validConvId) && validConvId > 0) {
       setLoading(true);
       setError(null);
       callService
-        .getConversationCallHistory(conversationId)
+        .getConversationCallHistory(validConvId)
         .then((records) => {
           setCalls(records);
         })

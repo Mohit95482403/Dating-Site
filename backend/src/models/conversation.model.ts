@@ -13,6 +13,10 @@ export class ConversationModel {
     userB: number,
     conn?: PoolConnection
   ): Promise<ConversationRow> {
+    if (!Number.isInteger(matchId) || !Number.isInteger(userA) || !Number.isInteger(userB) || matchId <= 0 || userA <= 0 || userB <= 0) {
+      throw new Error('Valid integer matchId, userA, and userB required');
+    }
+
     const findSql = `
       SELECT id, match_id, created_at, updated_at, last_message_at 
       FROM conversations 
@@ -91,6 +95,10 @@ export class ConversationModel {
     matchId?: number;
     conversationId?: number;
   }> {
+    if (!Number.isInteger(conversationId) || !Number.isInteger(userId) || conversationId <= 0 || userId <= 0) {
+      return { allowed: false, reason: 'unauthorized' };
+    }
+
     const sql = `
       SELECT 
         c.id, 
@@ -132,6 +140,10 @@ export class ConversationModel {
    * Find all conversations for a user with partner profile, last message preview, and unread counts
    */
   public static async findUserConversations(userId: number): Promise<ConversationItem[]> {
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return [];
+    }
+
     const sql = `
       SELECT 
         c.id AS conversation_id,
