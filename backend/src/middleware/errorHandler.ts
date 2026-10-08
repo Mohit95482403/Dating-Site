@@ -26,6 +26,19 @@ export const errorHandler = (
     message = 'Database operation could not be completed with the provided data.';
     errors = [];
   }
+  // Handle database connection and DNS failures (e.g. cloud database offline or host unresolvable)
+  else if (
+    err.code === 'ENOTFOUND' ||
+    err.code === 'ECONNREFUSED' ||
+    err.code === 'ETIMEDOUT' ||
+    err.code === 'PROTOCOL_CONNECTION_LOST' ||
+    err.code === 'ECONNRESET' ||
+    err.code === 'ER_CON_COUNT_ERROR'
+  ) {
+    statusCode = HttpStatus.SERVICE_UNAVAILABLE;
+    message = 'Database service is temporarily unavailable. Please verify cloud database connection or try again shortly.';
+    errors = [];
+  }
 
   // Handle Multer File Upload Errors
   if (err.name === 'MulterError' || (err.code && typeof err.code === 'string' && err.code.startsWith('LIMIT_'))) {

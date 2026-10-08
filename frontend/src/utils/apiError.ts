@@ -36,6 +36,8 @@ export function normalizeApiError(error: unknown): ApiError {
         message = 'Access restricted. Please contact support.';
       } else if (error.response.status === 429) {
         message = 'Too many requests. Please wait a moment before trying again.';
+      } else if (error.response.status === 503) {
+        message = 'Connectly database service is temporarily unavailable. Please verify cloud database connection.';
       } else if (error.response.status >= 500) {
         message = 'Connectly server is temporarily busy. Please try again in a few seconds.';
       } else {
