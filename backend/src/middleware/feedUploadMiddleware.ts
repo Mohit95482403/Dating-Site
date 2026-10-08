@@ -4,6 +4,7 @@ import fs from 'fs';
 import crypto from 'crypto';
 import { Request } from 'express';
 import { AppError } from '../utils/AppError';
+import { FEED_UPLOADS_DIR, STORIES_UPLOADS_DIR } from '../config/storage';
 
 const ALLOWED_MIME_TYPES = [
   'image/jpeg', 'image/png', 'image/webp', 'image/gif',
@@ -12,14 +13,14 @@ const ALLOWED_MIME_TYPES = [
 
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp4', '.webm', '.mov'];
 
-// Feed posts upload directory
-const feedDir = path.resolve(__dirname, '../../uploads/feed');
+// Feed posts upload directory (or Render Persistent Disk)
+const feedDir = FEED_UPLOADS_DIR;
 if (!fs.existsSync(feedDir)) {
   fs.mkdirSync(feedDir, { recursive: true });
 }
 
-// Stories upload directory
-const storiesDir = path.resolve(__dirname, '../../uploads/stories');
+// Stories upload directory (or Render Persistent Disk)
+const storiesDir = STORIES_UPLOADS_DIR;
 if (!fs.existsSync(storiesDir)) {
   fs.mkdirSync(storiesDir, { recursive: true });
 }

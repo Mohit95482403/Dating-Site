@@ -4,9 +4,10 @@ import fs from 'fs';
 import crypto from 'crypto';
 import { Request } from 'express';
 import { AppError } from '../utils/AppError';
+import { UPLOADS_DIR } from '../config/storage';
 
 // Ensure uploads directory exists
-const uploadDir = path.resolve(__dirname, '../../uploads');
+const uploadDir = UPLOADS_DIR;
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }

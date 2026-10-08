@@ -6,6 +6,7 @@ import { ProfileService } from './profile.service';
 import { AppError } from '../utils/AppError';
 import { logger } from '../utils/logger';
 import { FormattedPhoto } from './profile.service';
+import { UPLOADS_DIR } from '../config/storage';
 
 export const MAX_PHOTOS_PER_USER = 6;
 
@@ -189,7 +190,7 @@ export class PhotoService {
     // Delete physical file from filesystem
     if (photo.file_url) {
       const cleanRelative = photo.file_url.replace(/^\/uploads\//, '');
-      const physicalPath = path.resolve(__dirname, '../../uploads', cleanRelative);
+      const physicalPath = path.resolve(UPLOADS_DIR, cleanRelative);
       await unlinkSafe(physicalPath);
     }
 

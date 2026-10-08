@@ -4,6 +4,7 @@ import { SocketUserRegistry } from '../sockets/socketEvents';
 import config from '../config/env';
 import fs from 'fs';
 import path from 'path';
+import { UPLOADS_DIR } from '../config/storage';
 
 export interface SubsystemStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -103,7 +104,7 @@ export class HealthService {
     // 2. Storage Health Check
     let storageStatus: SubsystemStatus = { status: 'healthy' };
     try {
-      const uploadRoot = path.resolve(__dirname, '../../uploads');
+      const uploadRoot = UPLOADS_DIR;
       const exists = fs.existsSync(uploadRoot);
       if (!exists) {
         fs.mkdirSync(uploadRoot, { recursive: true });
@@ -112,8 +113,8 @@ export class HealthService {
       fs.accessSync(uploadRoot, fs.constants.W_OK | fs.constants.R_OK);
       storageStatus = {
         status: 'healthy',
-        message: 'Local media directory accessible & writable',
-        details: { path: 'uploads/' },
+        message: 'Persistent media directory accessible & writable',
+        details: { path: uploadRoot },
       };
     } catch (err: any) {
       storageStatus = {

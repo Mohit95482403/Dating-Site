@@ -5,9 +5,10 @@ import crypto from 'crypto';
 import { Request } from 'express';
 import { AppError } from '../utils/AppError';
 import { AuthenticatedRequest } from '../types/request.types';
+import { PROFILES_UPLOADS_DIR, VERIFICATIONS_UPLOADS_DIR } from './storage';
 
-// Root profile uploads directory: backend/uploads/profiles/
-export const PROFILE_UPLOADS_ROOT = path.resolve(__dirname, '../../uploads/profiles');
+// Root profile uploads directory: backend/uploads/profiles/ (or Render Persistent Disk)
+export const PROFILE_UPLOADS_ROOT = PROFILES_UPLOADS_DIR;
 
 // Ensure base upload directory exists
 if (!fs.existsSync(PROFILE_UPLOADS_ROOT)) {
@@ -79,8 +80,8 @@ export const uploadProfilePhotos = multer({
   },
 });
 
-// Secure Verification Uploads Directory: backend/uploads/verifications/
-export const VERIFICATION_UPLOADS_ROOT = path.resolve(__dirname, '../../uploads/verifications');
+// Secure Verification Uploads Directory: backend/uploads/verifications/ (or Render Persistent Disk)
+export const VERIFICATION_UPLOADS_ROOT = VERIFICATIONS_UPLOADS_DIR;
 if (!fs.existsSync(VERIFICATION_UPLOADS_ROOT)) {
   fs.mkdirSync(VERIFICATION_UPLOADS_ROOT, { recursive: true });
 }

@@ -13,6 +13,7 @@ import { authMiddleware } from './middleware/authMiddleware';
 import { securityHeaders } from './middleware/securityHeaders';
 import { requestId } from './middleware/requestId';
 import { maintenanceMiddleware } from './middleware/maintenanceMiddleware';
+import { UPLOADS_DIR, ensureUploadDirsExist } from './config/storage';
 import {
   generalApiLimiter,
   authRateLimiter,
@@ -126,14 +127,11 @@ const createApp = (): Application => {
     });
   });
 
-  // 9. Static media uploads directory
-  const uploadsDir = path.resolve(__dirname, '../uploads');
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-  }
+  // 9. Static media uploads directory (serves from Render Persistent Disk or local uploads)
+  ensureUploadDirsExist();
   app.use(
     '/uploads',
-    express.static(uploadsDir, {
+    express.static(UPLOADS_DIR, {
       maxAge: '1d',
       etag: true,
     })
