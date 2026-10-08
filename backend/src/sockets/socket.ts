@@ -411,16 +411,40 @@ export const initSocket = (httpServer: HttpServer): SocketIOServer => {
       }
     });
 
-    socket.on('call:media-state', async (payload: { callId: number; isMuted?: boolean; isCameraEnabled?: boolean }) => {
+    socket.on('call:media-state', async (payload: { callId: number; isMuted?: boolean; isCameraEnabled?: boolean; isVideoOff?: boolean; targetUserId?: number }) => {
       try {
         if (!userId || !payload?.callId) return;
         const callId = Number(payload.callId);
-        socket.to(`call:${callId}`).emit('call:media-state', {
+
+        const isVideoOff =
+          payload.isVideoOff !== undefined
+            ? payload.isVideoOff
+            : payload.isCameraEnabled !== undefined
+            ? !payload.isCameraEnabled
+            : undefined;
+
+        const isCameraEnabled =
+          payload.isCameraEnabled !== undefined
+            ? payload.isCameraEnabled
+            : payload.isVideoOff !== undefined
+            ? !payload.isVideoOff
+            : undefined;
+
+        const data = {
           callId,
           senderId: userId,
           isMuted: payload.isMuted,
-          isCameraEnabled: payload.isCameraEnabled,
-        });
+          isVideoOff,
+          isCameraEnabled,
+        };
+
+        socket.to(`call:${callId}`).emit('call:media-state', data);
+        if (payload.targetUserId && Number.isInteger(Number(payload.targetUserId))) {
+          const room = io?.sockets.adapter.rooms.get(`call:${callId}`);
+          if (!room || room.size <= 1) {
+            emitToUser(Number(payload.targetUserId), 'call:media-state', data);
+          }
+        }
       } catch (err) {
         logger.warn('[Socket] Failed to forward call:media-state:', err);
       }

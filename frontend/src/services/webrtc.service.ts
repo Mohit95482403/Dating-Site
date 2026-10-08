@@ -84,7 +84,6 @@ export class WebRTCService {
 
     try {
       this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
-      return this.localStream;
     } catch (err: any) {
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         const item = callType === 'video' ? 'Camera and microphone' : 'Microphone';
@@ -106,7 +105,6 @@ export class WebRTCService {
             audio: true,
             video: callType === 'video',
           });
-          return this.localStream;
         } catch (fallbackErr: any) {
           throw new Error('Unable to access media devices: ' + (fallbackErr.message || fallbackErr.name));
         }
@@ -114,6 +112,30 @@ export class WebRTCService {
         throw new Error('Unable to access media devices: ' + (err.message || err.name));
       }
     }
+
+    // Verify acquired audio tracks
+    const audioTracks = this.localStream.getAudioTracks();
+    if (audioTracks.length === 0) {
+      throw new Error('No microphone audio track found.');
+    }
+    audioTracks.forEach((t) => {
+      t.enabled = true;
+      console.log(`[WebRTC] Local audio track acquired: id=${t.id}, readyState=${t.readyState}, enabled=${t.enabled}`);
+    });
+
+    // Verify acquired video tracks for video calls
+    if (callType === 'video') {
+      const videoTracks = this.localStream.getVideoTracks();
+      if (videoTracks.length === 0) {
+        throw new Error('No camera video track found for video call.');
+      }
+      videoTracks.forEach((t) => {
+        t.enabled = true;
+        console.log(`[WebRTC] Local video track acquired: id=${t.id}, readyState=${t.readyState}, enabled=${t.enabled}`);
+      });
+    }
+
+    return this.localStream;
   }
 
   /**
@@ -128,20 +150,51 @@ export class WebRTCService {
     this.isRemoteDescriptionSet = false;
     this.iceCandidateQueue = [];
 
-    // Setup remote stream container
+    // Setup dedicated remote stream container
     this.remoteStream = new MediaStream();
 
     // 1. Remote media tracks handler
     pc.ontrack = (event: RTCTrackEvent) => {
-      console.log('[WebRTC] Received remote track:', event.track.kind);
-      if (event.streams && event.streams[0]) {
-        this.remoteStream = event.streams[0];
-      } else if (this.remoteStream) {
+      console.log(
+        `[WebRTC] ontrack: kind=${event.track.kind}, id=${event.track.id}, readyState=${event.track.readyState}`
+      );
+
+      if (!this.remoteStream) {
+        this.remoteStream = new MediaStream();
+      }
+
+      // Add track to remote stream container if not already present
+      const alreadyHas = this.remoteStream.getTracks().some((t) => t.id === event.track.id);
+      if (!alreadyHas) {
         this.remoteStream.addTrack(event.track);
+        console.log(
+          `[WebRTC] Added ${event.track.kind} track to remoteStream. Total remote tracks: ${this.remoteStream.getTracks().length}`
+        );
       }
-      if (this.callbacks.onRemoteStream && this.remoteStream) {
-        this.callbacks.onRemoteStream(this.remoteStream);
-      }
+
+      const dispatchFreshRemoteStream = () => {
+        if (this.callbacks.onRemoteStream && this.remoteStream) {
+          // Wrap in a new MediaStream instance so React state recognizes the reference change
+          // and triggers component re-render even if tracks arrive sequentially
+          const freshSnapshot = new MediaStream(this.remoteStream.getTracks());
+          console.log(
+            `[WebRTC] Dispatching remote stream update to UI: audio=${freshSnapshot.getAudioTracks().length}, video=${freshSnapshot.getVideoTracks().length}`
+          );
+          this.callbacks.onRemoteStream(freshSnapshot);
+        }
+      };
+
+      event.track.onunmute = () => {
+        console.log(`[WebRTC] Remote track unmuted: kind=${event.track.kind}, id=${event.track.id}`);
+        dispatchFreshRemoteStream();
+      };
+
+      event.track.onended = () => {
+        console.log(`[WebRTC] Remote track ended: kind=${event.track.kind}, id=${event.track.id}`);
+        dispatchFreshRemoteStream();
+      };
+
+      dispatchFreshRemoteStream();
     };
 
     // 2. Local ICE candidate generation handler
@@ -180,12 +233,7 @@ export class WebRTCService {
     };
 
     // 6. Attach existing local stream tracks
-    if (this.localStream) {
-      this.localStream.getTracks().forEach((track) => {
-        pc.addTrack(track, this.localStream!);
-      });
-      console.log(`[WebRTC] Attached ${this.localStream.getTracks().length} local media tracks to PeerConnection`);
-    }
+    this.attachLocalTracks();
 
     return pc;
   }
@@ -193,14 +241,53 @@ export class WebRTCService {
   /**
    * Ensure local tracks are attached to the PeerConnection
    */
-  private attachLocalTracks(): void {
+  public attachLocalTracks(): void {
     if (!this.peerConnection || !this.localStream) return;
     const senders = this.peerConnection.getSenders();
     this.localStream.getTracks().forEach((track) => {
-      const alreadyAttached = senders.some((s) => s.track === track);
+      const alreadyAttached = senders.some((s) => s.track && s.track.id === track.id);
       if (!alreadyAttached) {
-        this.peerConnection!.addTrack(track, this.localStream!);
-        console.log('[WebRTC] Added missing track to PeerConnection:', track.kind);
+        // Check if there is an empty sender for this kind from a remote offer
+        const emptySender = senders.find((s) => !s.track);
+        if (emptySender) {
+          try {
+            emptySender.replaceTrack(track);
+            console.log(`[WebRTC] Replaced track on existing sender: kind=${track.kind}`);
+            return;
+          } catch {
+            // fall back to addTrack
+          }
+        }
+        try {
+          this.peerConnection!.addTrack(track, this.localStream!);
+          console.log(`[WebRTC] Attached track to PeerConnection: kind=${track.kind}, id=${track.id}`);
+        } catch (err) {
+          console.warn(`[WebRTC] Error attaching track ${track.kind}:`, err);
+        }
+      }
+    });
+  }
+
+  /**
+   * Ensure transceivers for existing tracks are set to sendrecv
+   */
+  private configureTransceiverDirections(): void {
+    if (!this.peerConnection) return;
+    this.peerConnection.getTransceivers().forEach((transceiver) => {
+      const trackKind = transceiver.receiver.track?.kind;
+      if (trackKind && this.localStream) {
+        const localTrack = this.localStream.getTracks().find((t) => t.kind === trackKind && t.readyState === 'live');
+        if (localTrack && (!transceiver.sender.track || transceiver.sender.track !== localTrack)) {
+          try {
+            transceiver.sender.replaceTrack(localTrack);
+            console.log(`[WebRTC] Transceiver assigned local track: ${trackKind}`);
+          } catch (e) {
+            console.warn(`[WebRTC] replaceTrack warning for ${trackKind}:`, e);
+          }
+        }
+      }
+      if (transceiver.direction === 'recvonly' || transceiver.direction === 'inactive') {
+        transceiver.direction = 'sendrecv';
       }
     });
   }
@@ -215,14 +302,19 @@ export class WebRTCService {
     const pc = this.peerConnection!;
 
     this.attachLocalTracks();
+    this.configureTransceiverDirections();
 
     console.log('[WebRTC] Creating SDP offer...');
     const offer = await pc.createOffer({
       offerToReceiveAudio: true,
       offerToReceiveVideo: true,
     });
+
     console.log('[WebRTC] Setting local description (offer)...');
     await pc.setLocalDescription(offer);
+
+    const hasVideoMedia = pc.localDescription?.sdp?.includes('m=video');
+    console.log(`[WebRTC] SDP Offer initialized. Contains m=video: ${hasVideoMedia}`);
 
     return pc.localDescription!;
   }
@@ -243,10 +335,18 @@ export class WebRTCService {
     this.isRemoteDescriptionSet = true;
     await this.processQueuedIceCandidates();
 
+    // Re-verify local tracks are properly attached to the transceivers created by the offer
+    this.attachLocalTracks();
+    this.configureTransceiverDirections();
+
     console.log('[WebRTC] Creating SDP answer...');
     const answer = await pc.createAnswer();
+
     console.log('[WebRTC] Setting local description (answer)...');
     await pc.setLocalDescription(answer);
+
+    const hasVideoMedia = pc.localDescription?.sdp?.includes('m=video');
+    console.log(`[WebRTC] SDP Answer initialized. Contains m=video: ${hasVideoMedia}`);
 
     return pc.localDescription!;
   }
@@ -262,10 +362,12 @@ export class WebRTCService {
     const pc = this.peerConnection;
 
     if (pc.signalingState !== 'stable') {
-      console.log('[WebRTC] Setting remote description (answer)...');
+      const hasVideoMedia = answer.sdp?.includes('m=video');
+      console.log(`[WebRTC] Setting remote description (answer)... Contains m=video: ${hasVideoMedia}`);
       await pc.setRemoteDescription(new RTCSessionDescription(answer));
       this.isRemoteDescriptionSet = true;
       await this.processQueuedIceCandidates();
+      console.log('[WebRTC] Remote description (answer) successfully applied.');
     } else {
       console.log('[WebRTC] Signaling state already stable, skipping duplicate answer');
     }

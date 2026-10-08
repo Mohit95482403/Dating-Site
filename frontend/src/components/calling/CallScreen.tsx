@@ -35,22 +35,41 @@ export const CallScreen: React.FC = () => {
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
 
-  // Attach local stream to local video element
+  // Determine if streams have active, live video tracks
+  const hasRemoteVideo = Boolean(
+    remoteStream &&
+    remoteStream.getVideoTracks().length > 0 &&
+    remoteStream.getVideoTracks().some((t) => t.readyState === 'live')
+  );
+
+  const hasLocalVideo = Boolean(
+    localStream &&
+    localStream.getVideoTracks().length > 0 &&
+    localStream.getVideoTracks().some((t) => t.readyState === 'live')
+  );
+
+  // Bind local stream to local preview video element
   useEffect(() => {
     if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
+      if (localVideoRef.current.srcObject !== localStream) {
+        console.log('[CallScreen] Binding localStream to local video element');
+        localVideoRef.current.srcObject = localStream;
+      }
       localVideoRef.current.play().catch((err) => {
-        console.warn('[CallScreen] Local video autoplay notice:', err);
+        console.warn('[CallScreen] Local video playback notice:', err);
       });
     }
   }, [localStream, isCameraOff]);
 
-  // Attach remote stream to remote video element
+  // Bind remote stream to remote video element
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
-      remoteVideoRef.current.srcObject = remoteStream;
+      if (remoteVideoRef.current.srcObject !== remoteStream) {
+        console.log('[CallScreen] Binding remoteStream to remote video element, video tracks:', remoteStream.getVideoTracks().length);
+        remoteVideoRef.current.srcObject = remoteStream;
+      }
       remoteVideoRef.current.play().catch((err) => {
-        console.warn('[CallScreen] Remote video autoplay notice:', err);
+        console.warn('[CallScreen] Remote video playback notice:', err);
       });
     }
   }, [remoteStream, isRemoteCameraOff, callType]);
@@ -93,15 +112,25 @@ export const CallScreen: React.FC = () => {
       {/* Main Calling Content: Video vs Audio */}
       {callType === 'video' ? (
         <div className="call-video-container">
-          {/* Remote Video Stream */}
-          {remoteStream && !isRemoteCameraOff ? (
-            <video
-              ref={remoteVideoRef}
-              className="remote-video-feed"
-              autoPlay
-              playsInline
-            />
-          ) : (
+          {/* Remote Video Stream (Always mounted in DOM to prevent tearing down media pipeline) */}
+          <video
+            ref={(el) => {
+              remoteVideoRef.current = el;
+              if (el && remoteStream && el.srcObject !== remoteStream) {
+                el.srcObject = remoteStream;
+                el.play().catch((err) => console.warn('[CallScreen] Remote video autoplay notice:', err));
+              }
+            }}
+            className="remote-video-feed"
+            autoPlay
+            playsInline
+            style={{
+              display: hasRemoteVideo && !isRemoteCameraOff ? 'block' : 'none',
+            }}
+          />
+
+          {/* Remote Placeholder when camera is connecting or remote camera is off */}
+          {(!hasRemoteVideo || isRemoteCameraOff) && (
             <div className="remote-video-placeholder">
               <img
                 src={partnerAvatar}
@@ -116,15 +145,23 @@ export const CallScreen: React.FC = () => {
 
           {/* Floating Local Selfie Video PIP */}
           <div className="local-pip-wrapper">
-            {!isCameraOff ? (
-              <video
-                ref={localVideoRef}
-                className="local-video-feed"
-                autoPlay
-                playsInline
-                muted
-              />
-            ) : (
+            <video
+              ref={(el) => {
+                localVideoRef.current = el;
+                if (el && localStream && el.srcObject !== localStream) {
+                  el.srcObject = localStream;
+                  el.play().catch((err) => console.warn('[CallScreen] Local video autoplay notice:', err));
+                }
+              }}
+              className="local-video-feed"
+              autoPlay
+              playsInline
+              muted
+              style={{
+                display: hasLocalVideo && !isCameraOff ? 'block' : 'none',
+              }}
+            />
+            {(!hasLocalVideo || isCameraOff) && (
               <div
                 style={{
                   width: '100%',

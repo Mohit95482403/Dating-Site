@@ -300,9 +300,19 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const webrtc = getOrCreateWebRTC();
 
-      // 1. Acquire local media
-      console.log('[WebRTC] Receiver acquiring local media for incoming call...');
-      const stream = await webrtc.getLocalMedia(callTypeRef.current);
+      const targetCallType: CallType =
+        activeCallRef.current?.callType === 'video' ||
+        (activeCallRef.current as any)?.call_type === 'video' ||
+        callTypeRef.current === 'video'
+          ? 'video'
+          : 'audio';
+
+      setCallType(targetCallType);
+      callTypeRef.current = targetCallType;
+
+      // 1. Acquire local media (ensure video is acquired for video call)
+      console.log(`[WebRTC] Receiver acquiring local media for incoming ${targetCallType} call...`);
+      const stream = await webrtc.getLocalMedia(targetCallType);
       setLocalStream(stream);
 
       // 2. Initialize PeerConnection and attach local tracks
@@ -408,6 +418,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
           targetUserId: targetId,
           isMuted: muted,
           isVideoOff: isCameraOff,
+          isCameraEnabled: !isCameraOff,
         });
       }
     }
@@ -430,6 +441,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
           targetUserId: targetId,
           isMuted,
           isVideoOff: cameraOff,
+          isCameraEnabled: !cameraOff,
         });
       }
     }
@@ -463,13 +475,21 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
+      const rawCallType =
+        data?.callType ||
+        data?.call_type ||
+        (data?.call && (data.call.callType || data.call.call_type)) ||
+        data?.type ||
+        'audio';
+      const resolvedCallType: CallType = rawCallType === 'video' ? 'video' : 'audio';
+
       const incomingRecord: CallRecord = {
         id: incomingCallId,
         matchId: Number(data?.matchId || 0),
         conversationId: data?.conversationId ? Number(data.conversationId) : null,
         callerId,
         receiverId: currentUserIdRef.current ?? 0,
-        callType: data?.callType || 'audio',
+        callType: resolvedCallType,
         status: 'ringing',
         startedAt: data?.startedAt || new Date().toISOString(),
         answeredAt: null,
@@ -480,8 +500,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       activeCallRef.current = incomingRecord;
       setActiveCall(incomingRecord);
-      setCallType(data?.callType || 'audio');
-      callTypeRef.current = data?.callType || 'audio';
+      setCallType(resolvedCallType);
+      callTypeRef.current = resolvedCallType;
       setPartner(safeCaller);
       setCallState('incoming');
     };
@@ -498,6 +518,15 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ? activeCallRef.current?.receiverId
           : activeCallRef.current?.callerId)
       );
+
+      const rawCallType =
+        callRecord?.callType ||
+        (callRecord as any)?.call_type ||
+        callTypeRef.current;
+      if (rawCallType === 'video') {
+        setCallType('video');
+        callTypeRef.current = 'video';
+      }
 
       activeCallRef.current = callRecord;
       setActiveCall(callRecord);
@@ -560,9 +589,39 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // 8. WebRTC SDP Offer (Received by callee)
     const handleCallOffer = async (payload: CallSignalPayload) => {
+      // Guard against self-signaling loopback
+      if (payload?.senderId && payload.senderId === currentUserIdRef.current) {
+        console.log('[WebRTC] Ignoring self-emitted call:offer');
+        return;
+      }
+
       console.log('[WebRTC] Received call:offer from senderId:', payload?.senderId);
       try {
         const webrtc = getOrCreateWebRTC();
+
+        const isVideoOffer =
+          Boolean(payload?.sdp?.sdp?.includes('m=video')) ||
+          callTypeRef.current === 'video' ||
+          activeCallRef.current?.callType === 'video';
+
+        if (isVideoOffer) {
+          callTypeRef.current = 'video';
+          setCallType('video');
+        }
+
+        // Ensure receiver has local tracks acquired and attached before generating answer
+        const existingLocalStream = webrtc.getLocalStream();
+        const hasVideo = existingLocalStream && existingLocalStream.getVideoTracks().length > 0;
+        if (isVideoOffer && (!existingLocalStream || !hasVideo)) {
+          console.log('[WebRTC] Acquiring local video media for incoming video offer before answer...');
+          const stream = await webrtc.getLocalMedia('video');
+          setLocalStream(stream);
+        } else if (!existingLocalStream) {
+          console.log('[WebRTC] Acquiring local media for incoming offer before answer...');
+          const stream = await webrtc.getLocalMedia(callTypeRef.current);
+          setLocalStream(stream);
+        }
+
         if (payload?.sdp) {
           console.log('[WebRTC] Receiver setting remote offer and creating answer');
           const answer = await webrtc.handleOffer(payload.sdp);
@@ -582,6 +641,12 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // 9. WebRTC SDP Answer (Received by caller)
     const handleCallAnswer = async (payload: CallSignalPayload) => {
+      // Guard against self-signaling loopback
+      if (payload?.senderId && payload.senderId === currentUserIdRef.current) {
+        console.log('[WebRTC] Ignoring self-emitted call:answer');
+        return;
+      }
+
       console.log('[WebRTC] Caller received call:answer');
       try {
         if (webrtcRef.current && payload?.sdp) {
@@ -598,19 +663,28 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // 10. WebRTC ICE Candidate
     const handleCallIceCandidate = async (payload: CallSignalPayload) => {
+      // Guard against self-signaling loopback
+      if (payload?.senderId && payload.senderId === currentUserIdRef.current) {
+        return;
+      }
+
       try {
         if (webrtcRef.current && payload?.candidate) {
           await webrtcRef.current.addIceCandidate(payload.candidate);
         }
-      } catch (err: any) {
+      } catch (err) {
         console.warn('[CallContext] Error adding ICE candidate:', err);
       }
     };
 
     // 11. Remote Media State (Mute/Video toggle)
-    const handleMediaState = (payload: { isMuted?: boolean; isVideoOff?: boolean }) => {
+    const handleMediaState = (payload: { isMuted?: boolean; isVideoOff?: boolean; isCameraEnabled?: boolean }) => {
       if (payload.isMuted !== undefined) setIsRemoteMuted(payload.isMuted);
-      if (payload.isVideoOff !== undefined) setIsRemoteCameraOff(payload.isVideoOff);
+      if (payload.isVideoOff !== undefined) {
+        setIsRemoteCameraOff(payload.isVideoOff);
+      } else if (payload.isCameraEnabled !== undefined) {
+        setIsRemoteCameraOff(!payload.isCameraEnabled);
+      }
     };
 
     socket.on('call:incoming', handleCallIncoming);
