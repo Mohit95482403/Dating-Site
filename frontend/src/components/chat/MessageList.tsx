@@ -89,7 +89,17 @@ export const MessageList: React.FC<MessageListProps> = ({
   };
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
-    if (bottomAnchorRef.current) {
+    if (containerRef.current) {
+      if (behavior === 'auto') {
+        containerRef.current.scrollTop = containerRef.current.scrollHeight;
+      } else {
+        containerRef.current.scrollTo({
+          top: containerRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+      }
+      setShowScrollBottomPill(false);
+    } else if (bottomAnchorRef.current) {
       bottomAnchorRef.current.scrollIntoView({ behavior, block: 'end' });
       setShowScrollBottomPill(false);
     }

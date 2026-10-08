@@ -37,8 +37,10 @@ export const MessagesPage: React.FC = () => {
       : 'Messages | Connectly Real-Time Chat';
 
     document.body.classList.add('messages-immersive-view');
+    document.documentElement.classList.add('messages-immersive-view');
     return () => {
       document.body.classList.remove('messages-immersive-view');
+      document.documentElement.classList.remove('messages-immersive-view');
     };
   }, [activeConversation]);
 
