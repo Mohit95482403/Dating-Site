@@ -24,6 +24,8 @@ export interface AuthUser {
   isProfileComplete?: boolean;
   firstName?: string;
   lastName?: string | null;
+  avatarUrl?: string | null;
+  photoUrl?: string | null;
   dateOfBirth?: string | null;
   gender?: string | null;
   createdAt?: string;

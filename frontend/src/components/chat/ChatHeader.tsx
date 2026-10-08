@@ -5,6 +5,7 @@ import type { ConversationPartner } from '../../types/chat';
 import VerificationBadge from '../profile/VerificationBadge';
 import { useCall } from '../../context/CallContext';
 import ConversationCallHistoryModal from '../calling/ConversationCallHistoryModal';
+import { getMediaUrl } from '../../utils/media';
 
 interface ChatHeaderProps {
   partner: ConversationPartner;
@@ -58,7 +59,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
       {
         id: partner.id,
         firstName: partner.firstName,
-        photoUrl: partner.primaryPhoto?.fileUrl,
+        photoUrl: getMediaUrl((partner as any).avatarUrl || (partner as any).photoUrl || partner.primaryPhoto?.fileUrl),
       },
       matchId,
       conversationId
@@ -72,15 +73,19 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
       {
         id: partner.id,
         firstName: partner.firstName,
-        photoUrl: partner.primaryPhoto?.fileUrl,
+        photoUrl: getMediaUrl((partner as any).avatarUrl || (partner as any).photoUrl || partner.primaryPhoto?.fileUrl),
       },
       matchId,
       conversationId
     );
   };
 
+  const rawAvatar =
+    (partner as any).avatarUrl ||
+    (partner as any).photoUrl ||
+    partner.primaryPhoto?.fileUrl;
   const avatarUrl =
-    partner.primaryPhoto?.fileUrl ||
+    getMediaUrl(rawAvatar) ||
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80';
 
   return (

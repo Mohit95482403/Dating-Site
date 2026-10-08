@@ -24,6 +24,7 @@ const formatAuthor = (row: any): PostAuthor => ({
   firstName: row.first_name || '',
   lastName: row.last_name || '',
   photoUrl: row.photo_url || null,
+  avatarUrl: row.photo_url || null,
   isPremium: !!row.sub_status,
 });
 
@@ -83,6 +84,7 @@ const formatStory = (row: any): StoryItem => ({
     firstName: row.first_name || '',
     lastName: row.last_name || '',
     photoUrl: row.photo_url || null,
+    avatarUrl: row.photo_url || null,
     isPremium: false,
   },
   isViewed: Boolean(row.is_viewed),

@@ -34,7 +34,8 @@ export class UserModel {
         p.last_name,
         p.date_of_birth,
         p.gender,
-        p.is_profile_complete
+        p.is_profile_complete,
+        (SELECT file_url FROM photos WHERE user_id = u.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS avatar_url
       FROM users u
       LEFT JOIN profiles p ON u.id = p.user_id
       WHERE u.id = ?
@@ -53,6 +54,8 @@ export class UserModel {
       isProfileComplete: Boolean(row.is_profile_complete),
       firstName: row.first_name,
       lastName: row.last_name,
+      avatarUrl: row.avatar_url || null,
+      photoUrl: row.avatar_url || null,
       dateOfBirth: row.date_of_birth,
       gender: row.gender,
       createdAt: row.created_at,
@@ -108,7 +111,8 @@ export class UserModel {
         p.first_name,
         p.last_name,
         p.date_of_birth,
-        p.gender
+        p.gender,
+        (SELECT file_url FROM photos WHERE user_id = u.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS avatar_url
       FROM users u
       LEFT JOIN profiles p ON u.id = p.user_id
       WHERE u.id = ?
@@ -123,6 +127,8 @@ export class UserModel {
       username: r.username || null,
       firstName: r.first_name || '',
       lastName: r.last_name || null,
+      avatarUrl: r.avatar_url || null,
+      photoUrl: r.avatar_url || null,
       dateOfBirth: r.date_of_birth ? new Date(r.date_of_birth).toISOString().split('T')[0] : null,
       gender: r.gender || null,
       isEmailVerified: Boolean(r.is_email_verified),

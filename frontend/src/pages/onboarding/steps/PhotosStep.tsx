@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import Button from '../../../components/common/Button';
 import { onboardingService } from '../../../services/onboarding.service';
 import type { PhotoItem } from '../../../types/onboarding';
+import { getMediaUrl } from '../../../utils/media';
 import { 
   ArrowLeft, 
   Sparkles, 
@@ -147,7 +148,7 @@ export const PhotosStep: React.FC<PhotosStepProps> = ({
         {/* Existing Photos */}
         {photos.map((photo, idx) => (
           <div key={photo.id || idx} className="photo-card-item">
-            <img src={photo.fileUrl} alt={`Profile photo ${idx + 1}`} className="photo-img" />
+            <img src={getMediaUrl(photo.fileUrl)} alt={`Profile photo ${idx + 1}`} className="photo-img" />
 
             {photo.isPrimary && (
               <span className="primary-photo-badge">

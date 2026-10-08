@@ -125,6 +125,9 @@ export interface PublicUserProfile {
   matchStatus: 'none' | 'matched' | 'unmatched';
   conversationId: number | null;
   canMessage: boolean;
+  avatarUrl?: string | null;
+  photoUrl?: string | null;
+  primaryPhoto?: { id: number; fileUrl: string; url: string } | null;
 }
 
 export interface ReportProfileInput {

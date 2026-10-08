@@ -1,5 +1,6 @@
 import React from 'react';
 import type { ConversationItem } from '../../types/chat';
+import { getMediaUrl } from '../../utils/media';
 
 interface ConversationListItemProps {
   conversation: ConversationItem;
@@ -44,8 +45,12 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
 }) => {
   const { otherUser, lastMessage, unreadCount, lastMessageTime } = conversation;
 
+  const rawAvatar =
+    (otherUser as any).avatarUrl ||
+    (otherUser as any).photoUrl ||
+    otherUser.primaryPhoto?.fileUrl;
   const avatarUrl =
-    otherUser.primaryPhoto?.fileUrl ||
+    getMediaUrl(rawAvatar) ||
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80';
 
   const previewText = lastMessage

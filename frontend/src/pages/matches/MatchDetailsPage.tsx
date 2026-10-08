@@ -15,6 +15,7 @@ import {
   UserX 
 } from 'lucide-react';
 import { MatchCompatibilityCard } from '../../components/ai/MatchCompatibilityCard';
+import { getMediaUrl } from '../../utils/media';
 import '../../components/matches/Matches.css';
 
 export const MatchDetailsPage: React.FC = () => {
@@ -155,7 +156,7 @@ export const MatchDetailsPage: React.FC = () => {
         {/* Left Photo Gallery */}
         <div className="match-details-gallery-wrap">
           <img
-            src={currentPhoto.fileUrl}
+            src={getMediaUrl(currentPhoto.fileUrl)}
             alt={user.firstName}
             className="match-details-main-photo"
           />
@@ -165,7 +166,7 @@ export const MatchDetailsPage: React.FC = () => {
               {photos.map((p, idx) => (
                 <img
                   key={`photo-thumb-${p.id || idx}`}
-                  src={p.fileUrl}
+                  src={getMediaUrl(p.fileUrl)}
                   alt={`${user.firstName} photo ${idx + 1}`}
                   className={`match-details-thumb ${idx === selectedPhotoIndex ? 'active' : ''}`}
                   onClick={() => setSelectedPhotoIndex(idx)}

@@ -64,6 +64,8 @@ export class MatchService {
           state: profileA?.location_state || null,
         },
         primaryPhoto: photosA[0] ? { id: photosA[0].id, fileUrl: photosA[0].file_url } : null,
+        avatarUrl: photosA[0] ? photosA[0].file_url : null,
+        photoUrl: photosA[0] ? photosA[0].file_url : null,
       };
 
       const infoB = {
@@ -74,6 +76,8 @@ export class MatchService {
           state: profileB?.location_state || null,
         },
         primaryPhoto: photosB[0] ? { id: photosB[0].id, fileUrl: photosB[0].file_url } : null,
+        avatarUrl: photosB[0] ? photosB[0].file_url : null,
+        photoUrl: photosB[0] ? photosB[0].file_url : null,
       };
 
       notifyMatchCreated(matchId, userAId, userBId, infoA, infoB);

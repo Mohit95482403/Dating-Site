@@ -204,6 +204,8 @@ export class ConversationModel {
                 fileUrl: String(row.primary_photo_url),
               }
             : null,
+          avatarUrl: row.primary_photo_url ? String(row.primary_photo_url) : null,
+          photoUrl: row.primary_photo_url ? String(row.primary_photo_url) : null,
           isOnline,
           lastSeenAt: row.partner_last_seen_at ? new Date(row.partner_last_seen_at).toISOString() : null,
         },

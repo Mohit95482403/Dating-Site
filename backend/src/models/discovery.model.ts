@@ -216,7 +216,7 @@ export class DiscoveryModel {
       SELECT id, user_id, file_url, display_order, is_primary
       FROM photos
       WHERE user_id IN (?)
-      ORDER BY user_id, display_order ASC, created_at ASC
+      ORDER BY user_id, is_primary DESC, display_order ASC, created_at ASC
     `;
     const photoRows = await query<RowDataPacket[]>(photoSql, [candidateUserIds]);
     const photoMap: Record<number, CandidateProfilePhoto[]> = {};
@@ -296,6 +296,9 @@ export class DiscoveryModel {
           country: Number(c.use_location_for_discovery) !== 0 ? (c.location_country || 'India') : 'India',
         },
         photos: candPhotos,
+        primaryPhoto: candPhotos.find((p) => p.isPrimary) || candPhotos[0] || null,
+        avatarUrl: (candPhotos.find((p) => p.isPrimary) || candPhotos[0])?.fileUrl || null,
+        photoUrl: (candPhotos.find((p) => p.isPrimary) || candPhotos[0])?.fileUrl || null,
         interests: candInterests,
         sharedInterests,
         sharedInterestsCount,

@@ -65,6 +65,7 @@ export interface CommunityMemberItem {
     firstName: string;
     lastName: string;
     photoUrl: string | null;
+    avatarUrl?: string | null;
     isVerified: boolean;
     isOnline?: boolean;
     locationCity?: string | null;
@@ -104,6 +105,7 @@ export interface CommunityEventRsvpItem {
     firstName: string;
     lastName: string;
     photoUrl: string | null;
+    avatarUrl?: string | null;
     isVerified: boolean;
   };
 }
@@ -122,6 +124,7 @@ export interface CommunityMessageItem {
     firstName: string;
     lastName: string;
     photoUrl: string | null;
+    avatarUrl?: string | null;
     role: CommunityRole;
   };
 }

@@ -13,6 +13,7 @@ import { adminService } from '../../services/admin.service';
 import type { AdminUserListItem } from '../../types/admin';
 import { AdminTable, type Column } from '../../components/admin/AdminTable';
 import { SuspendUserModal } from '../../components/admin/SuspendUserModal';
+import { getMediaUrl } from '../../utils/media';
 import { BanUserModal } from '../../components/admin/BanUserModal';
 import { ConfirmActionModal } from '../../components/admin/ConfirmActionModal';
 import { useToast } from '../../context/ToastContext';
@@ -116,7 +117,7 @@ export const AdminUsersPage: React.FC = () => {
         <div className="admin-user-cell">
           <div className="admin-user-thumb">
             {u.avatarUrl ? (
-              <img src={u.avatarUrl} alt={u.firstName || 'Avatar'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={getMediaUrl(u.avatarUrl)} alt={u.firstName || 'Avatar'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               (u.firstName ? u.firstName.charAt(0).toUpperCase() : 'U')
             )}

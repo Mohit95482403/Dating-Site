@@ -1,6 +1,7 @@
 import React from 'react';
 import { MessageSquare, Sparkles } from 'lucide-react';
 import type { ConversationPartner } from '../../types/chat';
+import { getMediaUrl } from '../../utils/media';
 
 interface ChatEmptyStateProps {
   type: 'no-selection' | 'empty-conversation';
@@ -27,8 +28,12 @@ export const ChatEmptyState: React.FC<ChatEmptyStateProps> = ({
     );
   }
 
+  const rawAvatar =
+    (partner as any)?.avatarUrl ||
+    (partner as any)?.photoUrl ||
+    partner?.primaryPhoto?.fileUrl;
   const avatarUrl =
-    partner?.primaryPhoto?.fileUrl ||
+    getMediaUrl(rawAvatar) ||
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80';
 
   return (

@@ -12,6 +12,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import type { NotificationItem as NotificationItemType } from '../../types/notification';
+import { getMediaUrl } from '../../utils/media';
 
 interface NotificationItemProps {
   notification: NotificationItemType;
@@ -129,7 +130,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
       <div className="notification-avatar-wrap">
         {notification.actor?.avatarUrl ? (
           <img
-            src={notification.actor.avatarUrl}
+            src={getMediaUrl(notification.actor.avatarUrl)}
             alt={notification.actor.firstName || 'Member'}
             className="notification-avatar-img"
           />

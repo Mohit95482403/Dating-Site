@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import type { ScoredRecommendation, FeedbackType } from '../../types/personalization';
 import WhySeeingThisModal from './WhySeeingThisModal';
+import { getMediaUrl } from '../../utils/media';
 
 interface RecommendationCardProps {
   recommendation: ScoredRecommendation<any>;
@@ -44,7 +45,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = React.memo(
       entityId = String(item.user_id);
       title = `${item.first_name || 'Member'}${item.last_name ? ' ' + item.last_name : ''}${item.age ? ', ' + item.age : ''}`;
       subtitle = item.occupation || item.location_city || 'Active member';
-      imageUrl = item.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+      imageUrl = getMediaUrl(item.avatar_url) || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
       isVerified = Boolean(item.profile_verified || item.user_verified);
       isBoosted = Boolean(item.has_active_subscription);
       targetRoute = `/profile/${item.user_id}`;
@@ -54,7 +55,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = React.memo(
       entityId = String(item.id);
       title = item.name;
       subtitle = `${item.member_count || 1} members • ${item.category_name || 'Group'}`;
-      imageUrl = item.cover_image || item.avatar_image || 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=600&q=80';
+      imageUrl = getMediaUrl(item.cover_image || item.avatar_image) || 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=600&q=80';
       isBoosted = Boolean(item.is_boosted);
       targetRoute = `/communities/${item.slug || item.id}`;
       break;
@@ -63,7 +64,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = React.memo(
       entityId = String(item.id);
       title = item.title;
       subtitle = `${item.community_name || 'Community Event'} • ${item.location_name || 'Virtual'}`;
-      imageUrl = item.cover_image || 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80';
+      imageUrl = getMediaUrl(item.cover_image) || 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80';
       targetRoute = `/communities/${item.community_slug || 'events'}`;
       break;
 
@@ -71,7 +72,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = React.memo(
       entityId = String(item.id);
       title = `${item.author_first_name || 'User'}'s Post`;
       subtitle = item.community_name ? `in ${item.community_name}` : 'Public feed';
-      imageUrl = item.author_avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80';
+      imageUrl = getMediaUrl(item.author_avatar_url) || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80';
       isVerified = Boolean(item.author_verified);
       targetRoute = `/feed?post=${item.id}`;
       break;

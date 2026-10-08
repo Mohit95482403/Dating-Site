@@ -48,7 +48,12 @@ export class NotificationModel {
         ph.file_url AS actor_avatar_url
        FROM notifications n
        LEFT JOIN profiles p ON n.actor_id = p.user_id
-       LEFT JOIN photos ph ON n.actor_id = ph.user_id AND ph.is_primary = 1
+       LEFT JOIN photos ph ON ph.id = (
+         SELECT id FROM photos 
+         WHERE user_id = n.actor_id 
+         ORDER BY is_primary DESC, display_order ASC, id ASC 
+         LIMIT 1
+       )
        WHERE n.id = ?
        LIMIT 1`,
       [id]
@@ -90,7 +95,12 @@ export class NotificationModel {
         ph.file_url AS actor_avatar_url
        FROM notifications n
        LEFT JOIN profiles p ON n.actor_id = p.user_id
-       LEFT JOIN photos ph ON n.actor_id = ph.user_id AND ph.is_primary = 1
+       LEFT JOIN photos ph ON ph.id = (
+         SELECT id FROM photos 
+         WHERE user_id = n.actor_id 
+         ORDER BY is_primary DESC, display_order ASC, id ASC 
+         LIMIT 1
+       )
        ${whereClause}
        ORDER BY n.created_at DESC
        LIMIT ? OFFSET ?`,

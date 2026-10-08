@@ -2,6 +2,7 @@ import express, { Application } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import fs from 'fs';
 import config from './config/env';
 import routes from './routes';
 import { requestLogger } from './middleware/requestLogger';
@@ -126,7 +127,17 @@ const createApp = (): Application => {
   });
 
   // 9. Static media uploads directory
-  app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+  const uploadsDir = path.resolve(__dirname, '../uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  app.use(
+    '/uploads',
+    express.static(uploadsDir, {
+      maxAge: '1d',
+      etag: true,
+    })
+  );
 
   // 10. Operational maintenance mode interceptor
   app.use(maintenanceMiddleware);

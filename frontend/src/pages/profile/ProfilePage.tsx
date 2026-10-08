@@ -39,7 +39,7 @@ interface ProfilePageProps {
 
 export const ProfilePage: React.FC<ProfilePageProps> = ({ initialEditMode = false }) => {
   const { userId: routeUserId } = useParams<{ userId?: string }>();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -134,6 +134,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ initialEditMode = fals
           : {}),
       };
     });
+    refreshUser().catch(() => {});
   };
 
   const handleDeletePrompt = async (promptId: number) => {

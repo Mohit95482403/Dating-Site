@@ -22,6 +22,8 @@ export interface MatchUser {
   location?: MatchLocation | null;
   primaryPhoto?: MatchPhoto | null;
   photos?: MatchPhoto[];
+  avatarUrl?: string | null;
+  photoUrl?: string | null;
   interests?: string[];
   isVerified: boolean;
 }

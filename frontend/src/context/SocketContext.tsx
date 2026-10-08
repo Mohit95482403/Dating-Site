@@ -9,6 +9,7 @@ import notificationService from '../services/notification.service';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Heart, Star, MessageSquare, Flame, Bell, X } from 'lucide-react';
 import type { NotificationItem } from '../types/notification';
+import { getMediaUrl } from '../utils/media';
 
 interface RealtimeMatchPayload {
   matchId: number;
@@ -339,7 +340,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             <div className="relative flex-shrink-0 w-12 h-12 rounded-full overflow-hidden border-2 border-white/80 shadow-md">
               <img
                 src={
-                  newMatchToast.user?.primaryPhoto?.fileUrl ||
+                  getMediaUrl((newMatchToast.user as any)?.avatarUrl || newMatchToast.user?.primaryPhoto?.fileUrl) ||
                   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80'
                 }
                 alt={newMatchToast.user?.firstName || 'New Match'}
@@ -387,7 +388,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             {activityToast.actor?.avatarUrl ? (
               <div className="relative flex-shrink-0 w-11 h-11 rounded-full overflow-hidden border border-white/20 shadow-sm">
                 <img
-                  src={activityToast.actor.avatarUrl}
+                  src={getMediaUrl(activityToast.actor.avatarUrl)}
                   alt={activityToast.actor.firstName}
                   className="w-full h-full object-cover"
                 />

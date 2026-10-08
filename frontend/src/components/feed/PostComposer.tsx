@@ -3,6 +3,7 @@ import { Image, Send, X, User } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { FeedService } from '../../services/feed.service';
 import { CommunityService } from '../../services/community.service';
+import { getMediaUrl } from '../../utils/media';
 import type { PostItem, PostVisibility } from '../../types/feed';
 
 interface PostComposerProps {
@@ -86,7 +87,7 @@ export const PostComposer: React.FC<PostComposerProps> = ({ onPostCreated, commu
       <div className="composer-header">
         <div className="composer-avatar">
           {user?.avatarUrl ? (
-            <img src={user.avatarUrl} alt="User profile" />
+            <img src={getMediaUrl(user.avatarUrl)} alt="User profile" />
           ) : (
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-tertiary)' }}>
               <User size={22} color="#94a3b8" />

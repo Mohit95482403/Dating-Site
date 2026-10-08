@@ -3,6 +3,7 @@ import { X, Send, MessageSquare, Check, User } from 'lucide-react';
 import type { PostItem } from '../../types/feed';
 import { chatService } from '../../services/chat.service';
 import type { ConversationItem } from '../../types/chat';
+import { getMediaUrl } from '../../utils/media';
 
 interface SharePostModalProps {
   post: PostItem;
@@ -122,9 +123,9 @@ export const SharePostModal: React.FC<SharePostModalProps> = ({
                       justifyContent: 'center',
                     }}
                   >
-                    {conv.otherUser.primaryPhoto?.fileUrl ? (
+                    {((conv.otherUser as any).avatarUrl || (conv.otherUser as any).photoUrl || conv.otherUser.primaryPhoto?.fileUrl) ? (
                       <img
-                        src={conv.otherUser.primaryPhoto.fileUrl}
+                        src={getMediaUrl((conv.otherUser as any).avatarUrl || (conv.otherUser as any).photoUrl || conv.otherUser.primaryPhoto?.fileUrl)}
                         alt={conv.otherUser.firstName}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />

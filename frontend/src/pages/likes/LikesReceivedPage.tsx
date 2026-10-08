@@ -6,6 +6,7 @@ import SubscriptionService from '../../services/subscription.service';
 import discoveryService from '../../services/discovery.service';
 import { useToast } from '../../context/ToastContext';
 import type { ReceivedLikeCandidate } from '../../types/subscription';
+import { getMediaUrl } from '../../utils/media';
 import '../../components/premium/Premium.css';
 
 export const LikesReceivedPage: React.FC = () => {
@@ -159,7 +160,7 @@ export const LikesReceivedPage: React.FC = () => {
               <div className="like-photo-wrap">
                 <img
                   src={
-                    candidate.avatarUrl ||
+                    getMediaUrl(candidate.avatarUrl) ||
                     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'
                   }
                   alt={candidate.firstName}

@@ -56,7 +56,7 @@ export class ExploreModel {
         p.location_country,
         TIMESTAMPDIFF(YEAR, p.date_of_birth, CURDATE()) as calculated_age,
         COALESCE(u.is_email_verified, 0) as is_verified,
-        (SELECT file_url FROM photos WHERE user_id = u.id AND is_primary = 1 LIMIT 1) as photo_url,
+        (SELECT file_url FROM photos WHERE user_id = u.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url,
         EXISTS (
           SELECT 1 FROM profile_boosts pb 
           WHERE pb.user_id = u.id AND pb.status = 'active' AND pb.expires_at > NOW()
@@ -137,6 +137,7 @@ export class ExploreModel {
         firstName: String(r.first_name || ''),
         lastName: String(r.last_name || ''),
         photoUrl: r.photo_url || null,
+        avatarUrl: r.photo_url || null,
         age: r.calculated_age ? Number(r.calculated_age) : null,
         gender: r.gender || null,
         bio: r.bio || null,
@@ -184,7 +185,7 @@ export class ExploreModel {
         pr.first_name,
         pr.last_name,
         COALESCE(u.is_email_verified, 0) as is_verified,
-        (SELECT file_url FROM photos WHERE user_id = p.user_id AND is_primary = 1 LIMIT 1) as photo_url,
+        (SELECT file_url FROM photos WHERE user_id = p.user_id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url,
         EXISTS (SELECT 1 FROM post_likes WHERE post_id = p.id AND user_id = ?) as is_liked,
         EXISTS (SELECT 1 FROM post_bookmarks WHERE post_id = p.id AND user_id = ?) as is_bookmarked,
         EXISTS (SELECT 1 FROM subscriptions s WHERE s.user_id = p.user_id AND s.status = 'active') as is_premium
@@ -237,6 +238,7 @@ export class ExploreModel {
         firstName: r.first_name || '',
         lastName: r.last_name || '',
         photoUrl: r.photo_url || null,
+        avatarUrl: r.photo_url || null,
         isVerified: Boolean(r.is_verified),
         isPremium: Boolean(r.is_premium),
       },
@@ -270,7 +272,7 @@ export class ExploreModel {
         pr.first_name,
         pr.last_name,
         COALESCE(u.is_email_verified, 0) as is_verified,
-        (SELECT file_url FROM photos WHERE user_id = s.user_id AND is_primary = 1 LIMIT 1) as photo_url
+        (SELECT file_url FROM photos WHERE user_id = s.user_id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url
       FROM stories s
       JOIN users u ON s.user_id = u.id
       JOIN profiles pr ON s.user_id = pr.user_id
@@ -311,6 +313,7 @@ export class ExploreModel {
         firstName: r.first_name || '',
         lastName: r.last_name || '',
         photoUrl: r.photo_url || null,
+        avatarUrl: r.photo_url || null,
         isVerified: Boolean(r.is_verified),
       },
     }));
@@ -544,7 +547,7 @@ export class ExploreModel {
         pr.first_name,
         pr.last_name,
         COALESCE(u.is_email_verified, 0) as is_verified,
-        (SELECT file_url FROM photos WHERE user_id = p.user_id AND is_primary = 1 LIMIT 1) as photo_url,
+        (SELECT file_url FROM photos WHERE user_id = p.user_id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url,
         EXISTS (SELECT 1 FROM post_likes WHERE post_id = p.id AND user_id = ?) as is_liked,
         EXISTS (SELECT 1 FROM post_bookmarks WHERE post_id = p.id AND user_id = ?) as is_bookmarked,
         EXISTS (SELECT 1 FROM subscriptions s WHERE s.user_id = p.user_id AND s.status = 'active') as is_premium,
@@ -624,7 +627,7 @@ export class ExploreModel {
         pr.first_name,
         pr.last_name,
         COALESCE(u.is_email_verified, 0) as is_verified,
-        (SELECT file_url FROM photos WHERE user_id = s.user_id AND is_primary = 1 LIMIT 1) as photo_url
+        (SELECT file_url FROM photos WHERE user_id = s.user_id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url
       FROM stories s
       JOIN users u ON s.user_id = u.id
       JOIN profiles pr ON s.user_id = pr.user_id
@@ -698,7 +701,7 @@ export class ExploreModel {
         TIMESTAMPDIFF(YEAR, p.date_of_birth, CURDATE()) as calculated_age,
         COALESCE(u.is_email_verified, 0) as is_verified,
         COALESCE(p.is_profile_complete, 0) as is_profile_complete,
-        (SELECT file_url FROM photos WHERE user_id = u.id AND is_primary = 1 LIMIT 1) as photo_url,
+        (SELECT file_url FROM photos WHERE user_id = u.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url,
         EXISTS (
           SELECT 1 FROM profile_boosts pb 
           WHERE pb.user_id = u.id AND pb.status = 'active' AND pb.expires_at > NOW()
@@ -794,6 +797,7 @@ export class ExploreModel {
         firstName: String(r.first_name || ''),
         lastName: String(r.last_name || ''),
         photoUrl: r.photo_url || null,
+        avatarUrl: r.photo_url || null,
         age: r.calculated_age ? Number(r.calculated_age) : null,
         gender: r.gender || null,
         bio: r.bio || null,
@@ -921,7 +925,7 @@ export class ExploreModel {
         p.location_country,
         TIMESTAMPDIFF(YEAR, p.date_of_birth, CURDATE()) as calculated_age,
         COALESCE(u.is_email_verified, 0) as is_verified,
-        (SELECT file_url FROM photos WHERE user_id = u.id AND is_primary = 1 LIMIT 1) as photo_url,
+        (SELECT file_url FROM photos WHERE user_id = u.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url,
         EXISTS (
           SELECT 1 FROM profile_boosts pb 
           WHERE pb.user_id = u.id AND pb.status = 'active' AND pb.expires_at > NOW()
@@ -976,6 +980,7 @@ export class ExploreModel {
         firstName: String(r.first_name || ''),
         lastName: String(r.last_name || ''),
         photoUrl: r.photo_url || null,
+        avatarUrl: r.photo_url || null,
         age: r.calculated_age ? Number(r.calculated_age) : null,
         gender: r.gender || null,
         bio: r.bio || null,
@@ -1055,7 +1060,7 @@ export class ExploreModel {
         pr.first_name,
         pr.last_name,
         COALESCE(u.is_email_verified, 0) as is_verified,
-        (SELECT file_url FROM photos WHERE user_id = p.user_id AND is_primary = 1 LIMIT 1) as photo_url,
+        (SELECT file_url FROM photos WHERE user_id = p.user_id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url,
         EXISTS (SELECT 1 FROM post_likes WHERE post_id = p.id AND user_id = ?) as is_liked,
         EXISTS (SELECT 1 FROM post_bookmarks WHERE post_id = p.id AND user_id = ?) as is_bookmarked,
         EXISTS (SELECT 1 FROM subscriptions s WHERE s.user_id = p.user_id AND s.status = 'active') as is_premium

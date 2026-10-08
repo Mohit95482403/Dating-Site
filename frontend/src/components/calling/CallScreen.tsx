@@ -11,6 +11,7 @@ import {
   Volume2,
 } from 'lucide-react';
 import { useCall } from '../../context/CallContext';
+import { getMediaUrl } from '../../utils/media';
 import './CallScreen.css';
 
 export const CallScreen: React.FC = () => {
@@ -59,7 +60,7 @@ export const CallScreen: React.FC = () => {
   };
 
   const partnerAvatar =
-    partner?.photoUrl ||
+    getMediaUrl((partner as any)?.avatarUrl || partner?.photoUrl) ||
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80';
 
   return (

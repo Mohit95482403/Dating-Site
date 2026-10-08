@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { ProfilePhoto } from '../../types/profile';
 import { Camera, ChevronLeft, ChevronRight, X, Maximize2, Star, Image as ImageIcon } from 'lucide-react';
 import Button from '../../components/common/Button';
-import { BACKEND_URL } from '../../config/env';
+import { getMediaUrl } from '../../utils/media';
 
 interface ProfilePhotoGalleryProps {
   photos: ProfilePhoto[];
@@ -66,12 +66,7 @@ export const ProfilePhotoGallery: React.FC<ProfilePhotoGalleryProps> = ({
 
   // Helper to resolve image URL (relative upload path vs absolute web URL)
   const getImageUrl = (url: string) => {
-    if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    const backendOrigin = BACKEND_URL;
-    return `${backendOrigin}${url.startsWith('/') ? '' : '/'}${url}`;
+    return getMediaUrl(url) || '';
   };
 
   return (

@@ -187,6 +187,8 @@ export class MatchModel {
               isPrimary: true,
             }
           : null,
+        avatarUrl: row.primary_photo_url ? String(row.primary_photo_url) : null,
+        photoUrl: row.primary_photo_url ? String(row.primary_photo_url) : null,
         isVerified: Boolean(row.is_email_verified),
       },
     }));
@@ -278,6 +280,8 @@ export class MatchModel {
             isPrimary: true,
           }
         : null,
+      avatarUrl: row.primary_photo_url ? String(row.primary_photo_url) : null,
+      photoUrl: row.primary_photo_url ? String(row.primary_photo_url) : null,
       photos: allPhotos.map((p) => ({
         id: p.id,
         fileUrl: p.file_url,

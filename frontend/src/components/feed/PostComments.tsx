@@ -3,6 +3,7 @@ import { Send, Heart, Trash2, User } from 'lucide-react';
 import type { CommentItem } from '../../types/feed';
 import { FeedService } from '../../services/feed.service';
 import { useAuth } from '../../hooks/useAuth';
+import { getMediaUrl } from '../../utils/media';
 
 interface PostCommentsProps {
   postId: number;
@@ -160,7 +161,7 @@ export const PostComments: React.FC<PostCommentsProps> = ({
             <div key={comment.id} className="comment-item">
               <div className="comment-avatar">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt={authorName} />
+                  <img src={getMediaUrl(avatarUrl)} alt={authorName} />
                 ) : (
                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-tertiary)' }}>
                     <User size={16} color="#94a3b8" />

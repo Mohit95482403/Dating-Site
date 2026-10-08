@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import type { MatchItem } from '../../types/match';
 import { MapPin, CheckCircle, MessageSquare, ExternalLink } from 'lucide-react';
+import { getMediaUrl } from '../../utils/media';
 import './Matches.css';
 
 interface MatchCardProps {
@@ -33,9 +34,13 @@ export const formatMatchedTime = (isoString?: string): string => {
 export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
   const { user, matchedAt } = match;
 
-  const photoUrl =
+  const rawUrl =
+    user.avatarUrl ||
+    user.photoUrl ||
     user.primaryPhoto?.fileUrl ||
-    user.photos?.[0]?.fileUrl ||
+    user.photos?.[0]?.fileUrl;
+  const photoUrl =
+    getMediaUrl(rawUrl) ||
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80';
 
   const locationText = [user.location?.city, user.location?.state]

@@ -40,6 +40,9 @@ export interface CandidateProfile {
     country: string | null;
   };
   photos: CandidateProfilePhoto[];
+  primaryPhoto?: CandidateProfilePhoto | null;
+  avatarUrl?: string | null;
+  photoUrl?: string | null;
   interests: CandidateInterest[];
   sharedInterests: string[];
   sharedInterestsCount: number;

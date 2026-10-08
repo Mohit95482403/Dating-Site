@@ -6,6 +6,7 @@ import { useSocket } from '../../hooks/useSocket';
 import { User, Users, LogOut, LayoutDashboard, Heart, Compass, MessageSquare, Bell, Settings as SettingsIcon, Shield, Sparkles } from 'lucide-react';
 import { useSubscription } from '../../hooks/useSubscription';
 import PremiumBadge from '../premium/PremiumBadge';
+import { getMediaUrl } from '../../utils/media';
 import './Navbar.css';
 
 export const Navbar: React.FC = () => {
@@ -140,8 +141,16 @@ export const Navbar: React.FC = () => {
           {isAuthenticated ? (
             <div className="auth-nav-user-group">
               <Link to="/dashboard" className="nav-user-chip" title="Go to Dashboard">
-                <span className="nav-avatar-icon">
-                  <User size={15} />
+                <span className="nav-avatar-icon" style={{ overflow: 'hidden' }}>
+                  {user?.avatarUrl ? (
+                    <img
+                      src={getMediaUrl(user.avatarUrl)}
+                      alt={user.firstName || 'Profile'}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <User size={15} />
+                  )}
                 </span>
                 <span className="nav-user-name">{user?.firstName || 'Account'}</span>
                 {badge && <PremiumBadge badge={badge} size="sm" />}

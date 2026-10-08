@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserX, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import SettingsService from '../../services/settings.service';
 import type { BlockedUserItem } from '../../types/settings';
+import { getMediaUrl } from '../../utils/media';
 
 interface BlockedUsersProps {
   onCountChange?: (count: number) => void;
@@ -91,7 +92,7 @@ export const BlockedUsers: React.FC<BlockedUsersProps> = ({ onCountChange }) => 
             <div className="blocked-user-profile">
               {item.avatarUrl ? (
                 <img
-                  src={item.avatarUrl}
+                  src={getMediaUrl(item.avatarUrl)}
                   alt={item.firstName}
                   className="blocked-user-avatar"
                   onError={(e) => {

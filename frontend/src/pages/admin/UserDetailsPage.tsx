@@ -16,6 +16,7 @@ import { SuspendUserModal } from '../../components/admin/SuspendUserModal';
 import { BanUserModal } from '../../components/admin/BanUserModal';
 import { ConfirmActionModal } from '../../components/admin/ConfirmActionModal';
 import { useToast } from '../../context/ToastContext';
+import { getMediaUrl } from '../../utils/media';
 
 export const AdminUserDetailsPage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -304,7 +305,7 @@ export const AdminUserDetailsPage: React.FC = () => {
                   border: p.isPrimary ? '2px solid #6366f1' : '1px solid rgba(255,255,255,0.1)'
                 }}
               >
-                <img src={p.fileUrl} alt="User media" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={getMediaUrl(p.fileUrl)} alt="User media" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 {p.isPrimary && (
                   <span style={{
                     position: 'absolute',

@@ -435,7 +435,7 @@ export class CommunityModel {
   public static async getMember(communityId: number, userId: number): Promise<CommunityMemberItem | null> {
     const rows = await query<RowDataPacket[]>(
       `SELECT cm.*, pr.first_name, pr.last_name, u.is_email_verified as is_verified,
-              (SELECT file_url FROM photos WHERE user_id = u.id AND is_primary = 1 LIMIT 1) as photo_url
+              (SELECT file_url FROM photos WHERE user_id = u.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url
        FROM community_members cm
        JOIN users u ON cm.user_id = u.id
        LEFT JOIN profiles pr ON u.id = pr.user_id
@@ -508,7 +508,7 @@ export class CommunityModel {
       `SELECT cm.*, pr.first_name, pr.last_name, pr.location_city,
               u.is_email_verified as is_verified,
               (u.last_seen_at >= NOW() - INTERVAL 15 MINUTE) as is_online,
-              (SELECT file_url FROM photos WHERE user_id = u.id AND is_primary = 1 LIMIT 1) as photo_url
+              (SELECT file_url FROM photos WHERE user_id = u.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url
        FROM community_members cm
        JOIN users u ON cm.user_id = u.id
        LEFT JOIN profiles pr ON u.id = pr.user_id
@@ -663,7 +663,7 @@ export class CommunityModel {
       `SELECT p.*,
               pr.first_name, pr.last_name,
               u.is_email_verified as is_verified,
-              (SELECT file_url FROM photos WHERE user_id = p.user_id AND is_primary = 1 LIMIT 1) as photo_url,
+              (SELECT file_url FROM photos WHERE user_id = p.user_id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url,
               EXISTS (SELECT 1 FROM post_likes WHERE post_id = p.id AND user_id = ?) as is_liked,
               EXISTS (SELECT 1 FROM post_bookmarks WHERE post_id = p.id AND user_id = ?) as is_bookmarked,
               (SELECT cm.role FROM community_members cm WHERE cm.community_id = p.community_id AND cm.user_id = p.user_id LIMIT 1) as author_community_role
@@ -996,7 +996,7 @@ export class CommunityModel {
   public static async getEventAttendees(eventId: number): Promise<CommunityEventRsvpItem[]> {
     const rows = await query<RowDataPacket[]>(
       `SELECT cer.*, pr.first_name, pr.last_name, u.is_email_verified as is_verified,
-              (SELECT file_url FROM photos WHERE user_id = u.id AND is_primary = 1 LIMIT 1) as photo_url
+              (SELECT file_url FROM photos WHERE user_id = u.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url
        FROM community_event_rsvps cer
        JOIN users u ON cer.user_id = u.id
        JOIN profiles pr ON u.id = pr.user_id
@@ -1034,7 +1034,7 @@ export class CommunityModel {
 
     const rows = await query<RowDataPacket[]>(
       `SELECT cm.*, pr.first_name, pr.last_name,
-              (SELECT file_url FROM photos WHERE user_id = cm.sender_id AND is_primary = 1 LIMIT 1) as photo_url,
+              (SELECT file_url FROM photos WHERE user_id = cm.sender_id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url,
               COALESCE(
                 (SELECT c_mem.role FROM community_members c_mem WHERE c_mem.community_id = cm.community_id AND c_mem.user_id = cm.sender_id LIMIT 1),
                 'member'
@@ -1063,6 +1063,7 @@ export class CommunityModel {
         firstName: r.first_name || '',
         lastName: r.last_name || '',
         photoUrl: r.photo_url || null,
+        avatarUrl: r.photo_url || null,
         role: (r.sender_role as CommunityRole) || 'member',
       },
     }));
@@ -1085,7 +1086,7 @@ export class CommunityModel {
 
     const rows = await query<RowDataPacket[]>(
       `SELECT cm.*, pr.first_name, pr.last_name,
-              (SELECT file_url FROM photos WHERE user_id = cm.sender_id AND is_primary = 1 LIMIT 1) as photo_url,
+              (SELECT file_url FROM photos WHERE user_id = cm.sender_id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url,
               COALESCE(
                 (SELECT c_mem.role FROM community_members c_mem WHERE c_mem.community_id = cm.community_id AND c_mem.user_id = cm.sender_id LIMIT 1),
                 'member'
@@ -1112,6 +1113,7 @@ export class CommunityModel {
         firstName: r.first_name || '',
         lastName: r.last_name || '',
         photoUrl: r.photo_url || null,
+        avatarUrl: r.photo_url || null,
         role: (r.sender_role as CommunityRole) || 'member',
       },
     };

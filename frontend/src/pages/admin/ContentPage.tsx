@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import type { AdminContentReportItem, FeedAnalytics } from '../../types/feed';
 import { FeedService } from '../../services/feed.service';
+import { getMediaUrl } from '../../utils/media';
 import '../../styles/admin.css';
 
 export const AdminContentPage: React.FC = () => {
@@ -506,7 +507,7 @@ export const AdminContentPage: React.FC = () => {
                   {selectedReport.contentDetails.mediaUrl && (
                     <div style={{ marginTop: '10px', maxHeight: '180px', overflow: 'hidden', borderRadius: '8px' }}>
                       <img
-                        src={selectedReport.contentDetails.mediaUrl}
+                        src={getMediaUrl(selectedReport.contentDetails.mediaUrl)}
                         alt="Reported content"
                         style={{ width: '100%', maxHeight: '180px', objectFit: 'cover' }}
                       />

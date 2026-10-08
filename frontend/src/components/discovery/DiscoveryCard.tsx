@@ -12,6 +12,7 @@ import {
   Rocket,
 } from 'lucide-react';
 import PremiumBadge from '../premium/PremiumBadge';
+import { getMediaUrl } from '../../utils/media';
 import './Discovery.css';
 
 interface DiscoveryCardProps {
@@ -83,7 +84,7 @@ export const DiscoveryCard: React.FC<DiscoveryCardProps> = ({
       {/* PHOTO CAROUSEL AREA */}
       <div className="card-photo-container">
         <img
-          src={imgError ? fallbackImg : currentPhoto.fileUrl}
+          src={imgError ? fallbackImg : getMediaUrl(currentPhoto.fileUrl)}
           alt={`${profile.firstName} profile`}
           className="card-photo-img"
           onError={() => setImgError(true)}

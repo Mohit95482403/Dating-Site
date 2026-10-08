@@ -31,6 +31,7 @@ export interface SearchResultProfile {
   firstName: string;
   lastName: string;
   photoUrl: string | null;
+  avatarUrl?: string | null;
   age: number | null;
   gender: string | null;
   bio: string | null;

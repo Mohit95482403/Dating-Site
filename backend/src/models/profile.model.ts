@@ -218,7 +218,7 @@ export class ProfileModel {
              created_at, updated_at
       FROM photos
       WHERE user_id = ?
-      ORDER BY display_order ASC, created_at ASC
+      ORDER BY is_primary DESC, display_order ASC, created_at ASC
     `;
     const rows = conn
       ? ((await conn.query<RowDataPacket[]>(sql, [userId]))[0] as RowDataPacket[])
@@ -479,41 +479,54 @@ export class ProfileModel {
       }
     }
 
-    return {
-      userId: Number(row.user_id),
-      firstName: String(row.first_name),
-      lastName: row.last_name ? String(row.last_name) : null,
-      age,
-      gender: row.gender ? String(row.gender) : null,
-      bio: row.bio ? String(row.bio) : null,
-      occupation: row.occupation ? String(row.occupation) : null,
-      education: row.education ? String(row.education) : null,
-      location: {
-        city: row.location_city ? String(row.location_city) : null,
-        state: row.location_state ? String(row.location_state) : null,
-        country: row.location_country ? String(row.location_country) : null,
-      },
-      photos: photos.map((p) => ({
-        id: Number(p.id),
-        url: p.file_url,
-        isPrimary: Boolean(p.is_primary),
-        displayOrder: Number(p.display_order),
-      })),
-      interests: interests.map((i) => ({
-        id: Number(i.id),
-        name: String(i.name),
-        slug: String(i.slug),
-      })),
-      prompts,
-      isVerified: Boolean(row.is_verified) || verification.isVerified,
-      verificationStatus: verification.status,
-      isOnline,
-      lastSeenAt,
-      matchStatus,
-      conversationId,
-      canMessage,
-    };
-  }
+      const primaryPhoto = photos.find((p) => p.is_primary) || photos[0] || null;
+
+      return {
+        userId: Number(row.user_id),
+        firstName: String(row.first_name),
+        lastName: row.last_name ? String(row.last_name) : null,
+        age,
+        gender: row.gender ? String(row.gender) : null,
+        bio: row.bio ? String(row.bio) : null,
+        occupation: row.occupation ? String(row.occupation) : null,
+        education: row.education ? String(row.education) : null,
+        location: {
+          city: row.location_city ? String(row.location_city) : null,
+          state: row.location_state ? String(row.location_state) : null,
+          country: row.location_country ? String(row.location_country) : null,
+        },
+        photos: photos.map((p) => ({
+          id: Number(p.id),
+          url: p.file_url,
+          fileUrl: p.file_url,
+          fileName: p.file_name,
+          isPrimary: Boolean(p.is_primary),
+          displayOrder: Number(p.display_order),
+        })),
+        avatarUrl: primaryPhoto ? primaryPhoto.file_url : null,
+        photoUrl: primaryPhoto ? primaryPhoto.file_url : null,
+        primaryPhoto: primaryPhoto
+          ? {
+              id: Number(primaryPhoto.id),
+              fileUrl: primaryPhoto.file_url,
+              url: primaryPhoto.file_url,
+            }
+          : null,
+        interests: interests.map((i) => ({
+          id: Number(i.id),
+          name: String(i.name),
+          slug: String(i.slug),
+        })),
+        prompts,
+        isVerified: Boolean(row.is_verified) || verification.isVerified,
+        verificationStatus: verification.status,
+        isOnline,
+        lastSeenAt,
+        matchStatus,
+        conversationId,
+        canMessage,
+      };
+    }
 }
 
 export default ProfileModel;

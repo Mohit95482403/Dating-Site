@@ -63,6 +63,8 @@ export interface ConversationPartner {
     id: number;
     fileUrl: string;
   } | null;
+  avatarUrl?: string | null;
+  photoUrl?: string | null;
   isOnline?: boolean;
   lastSeenAt?: string | null;
 }

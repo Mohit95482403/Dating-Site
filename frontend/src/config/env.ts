@@ -9,9 +9,20 @@ const sanitizeUrl = (url?: string): string => {
   return url.trim().replace(/\/+$/, '');
 };
 
-// Fallback defaults for local development
-const DEFAULT_API_URL = 'http://localhost:5000/api';
-const DEFAULT_BACKEND_URL = 'http://localhost:5000';
+// Production fallbacks
+const PROD_BACKEND_URL = 'https://connectly-backend-j7wp.onrender.com';
+const PROD_API_URL = 'https://connectly-backend-j7wp.onrender.com/api';
+
+const isProductionDomain =
+  (typeof window !== 'undefined' &&
+    window.location.hostname !== 'localhost' &&
+    window.location.hostname !== '127.0.0.1') ||
+  import.meta.env.PROD ||
+  import.meta.env.MODE === 'production';
+
+// Fallback defaults: production origin when deployed, localhost only during local development
+const DEFAULT_API_URL = isProductionDomain ? PROD_API_URL : 'http://localhost:5000/api';
+const DEFAULT_BACKEND_URL = isProductionDomain ? PROD_BACKEND_URL : 'http://localhost:5000';
 
 const rawApiUrl = import.meta.env.VITE_API_URL as string | undefined;
 const rawSocketUrl = import.meta.env.VITE_SOCKET_URL as string | undefined;

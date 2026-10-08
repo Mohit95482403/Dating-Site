@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getMediaUrl } from '../../utils/media';
 import './ProfilePreviewCard.css';
 
 interface ProfilePreviewCardProps {
@@ -42,7 +43,7 @@ export const ProfilePreviewCard: React.FC<ProfilePreviewCardProps> = ({
       {/* Main Card */}
       <div className="profile-card glass-panel">
         <div className="profile-image-container">
-          <img src={imageSrc} alt={`${name}, ${age}`} className="profile-photo" />
+          <img src={getMediaUrl(imageSrc) || imageSrc} alt={`${name}, ${age}`} className="profile-photo" />
           <div className="profile-gradient-overlay" />
 
           {/* Compatibility Tag */}
@@ -84,9 +85,9 @@ export const ProfilePreviewCard: React.FC<ProfilePreviewCardProps> = ({
 
         {/* Action Buttons Bar */}
         <div className="profile-action-bar">
-          <button 
-            type="button" 
-            className="action-circle pass-btn" 
+          <button
+            type="button"
+            className="action-circle pass-btn"
             title="Pass"
             onClick={() => {
               setLiked(false);
@@ -99,8 +100,8 @@ export const ProfilePreviewCard: React.FC<ProfilePreviewCardProps> = ({
             </svg>
           </button>
 
-          <button 
-            type="button" 
+          <button
+            type="button"
             className={`action-circle super-btn ${superLiked ? 'active' : ''}`}
             title="Super Like"
             onClick={() => setSuperLiked(!superLiked)}
@@ -110,8 +111,8 @@ export const ProfilePreviewCard: React.FC<ProfilePreviewCardProps> = ({
             </svg>
           </button>
 
-          <button 
-            type="button" 
+          <button
+            type="button"
             className={`action-circle like-btn ${liked ? 'active' : ''}`}
             title="Like"
             onClick={() => setLiked(!liked)}

@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import type { ProfilePhoto } from '../../types/profile';
+import { getMediaUrl } from '../../utils/media';
 import './PhotoViewer.css';
 
 interface PhotoViewerProps {
@@ -130,7 +131,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
 
           <div className="photo-viewer-image-wrap">
             <img
-              src={currentPhoto.url}
+              src={getMediaUrl(currentPhoto.url)}
               alt={currentPhoto.fileName || `Profile photo ${currentIndex + 1}`}
               className="photo-viewer-image"
               loading="eager"
@@ -162,7 +163,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
                 className={`photo-viewer-thumb-btn ${idx === currentIndex ? 'active' : ''}`}
                 onClick={() => onIndexChange(idx)}
               >
-                <img src={p.url} alt={`Thumbnail ${idx + 1}`} />
+                <img src={getMediaUrl(p.url)} alt={`Thumbnail ${idx + 1}`} />
               </button>
             ))}
           </div>

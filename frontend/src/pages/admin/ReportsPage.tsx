@@ -11,6 +11,7 @@ import { AdminTable, type Column } from '../../components/admin/AdminTable';
 import { ResolveReportModal } from '../../components/admin/ResolveReportModal';
 import { useToast } from '../../context/ToastContext';
 import { useSocket } from '../../hooks/useSocket';
+import { getMediaUrl } from '../../utils/media';
 
 export const AdminReportsPage: React.FC = () => {
   const [reports, setReports] = useState<AdminReportListItem[]>([]);
@@ -114,7 +115,7 @@ export const AdminReportsPage: React.FC = () => {
         <div className="admin-user-cell" style={{ minWidth: '160px', maxWidth: '240px' }}>
           <div className="admin-user-thumb" style={{ flexShrink: 0 }}>
             {r.reportedAvatar ? (
-              <img src={r.reportedAvatar} alt={r.reportedName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={getMediaUrl(r.reportedAvatar)} alt={r.reportedName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               r.reportedName.charAt(0).toUpperCase()
             )}

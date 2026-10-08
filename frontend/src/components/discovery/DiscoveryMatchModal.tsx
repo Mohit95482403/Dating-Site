@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { DiscoveryProfile } from '../../types/discovery';
 import { useAuth } from '../../hooks/useAuth';
 import { Heart, Sparkles, MessageCircle, ArrowRight } from 'lucide-react';
+import { getMediaUrl } from '../../utils/media';
 import './DiscoveryMatchModal.css';
 
 interface DiscoveryMatchModalProps {
@@ -34,12 +35,17 @@ export const DiscoveryMatchModal: React.FC<DiscoveryMatchModalProps> = ({
 
   if (!isOpen || !matchedProfile) return null;
 
+  const rawPartnerPhoto =
+    (matchedProfile as any).avatarUrl ||
+    (matchedProfile as any).photoUrl ||
+    (matchedProfile as any).primaryPhoto?.fileUrl ||
+    matchedProfile.photos?.[0]?.fileUrl;
   const partnerPhotoUrl =
-    matchedProfile.photos?.[0]?.fileUrl ||
+    getMediaUrl(rawPartnerPhoto) ||
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80';
 
-  // Fallback for current user avatar
   const myPhotoUrl =
+    getMediaUrl(currentUser?.avatarUrl) ||
     'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&q=80';
 
   const handleSendMessage = () => {

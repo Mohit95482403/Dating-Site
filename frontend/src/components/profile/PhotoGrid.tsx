@@ -2,7 +2,7 @@ import React, { useState, type DragEvent } from 'react';
 import type { ProfilePhoto } from '../../types/profile';
 import { Star, Trash2, ArrowLeft, ArrowRight, AlertTriangle, GripVertical, Image as ImageIcon } from 'lucide-react';
 import Button from '../common/Button';
-import { BACKEND_URL } from '../../config/env';
+import { getMediaUrl } from '../../utils/media';
 
 interface PhotoGridProps {
   photos: ProfilePhoto[];
@@ -29,12 +29,7 @@ export const PhotoGrid: React.FC<PhotoGridProps> = ({
   };
 
   const getImageUrl = (url: string) => {
-    if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    const backendOrigin = BACKEND_URL;
-    return `${backendOrigin}${url.startsWith('/') ? '' : '/'}${url}`;
+    return getMediaUrl(url) || '';
   };
 
   // Drag and Drop reordering handlers

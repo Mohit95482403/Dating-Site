@@ -4,6 +4,7 @@
 import React from 'react';
 import { Phone, PhoneOff, Video } from 'lucide-react';
 import { useCall } from '../../context/CallContext';
+import { getMediaUrl } from '../../utils/media';
 import './CallScreen.css';
 
 export const IncomingCallModal: React.FC = () => {
@@ -14,7 +15,7 @@ export const IncomingCallModal: React.FC = () => {
   }
 
   const avatarUrl =
-    partner.photoUrl ||
+    getMediaUrl((partner as any).avatarUrl || partner.photoUrl) ||
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80';
 
   return (

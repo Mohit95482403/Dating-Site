@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { DiscoveryProfile } from '../../types/discovery';
 import { X, MapPin, Briefcase, GraduationCap, CheckCircle2, Star, Sparkles, Heart } from 'lucide-react';
+import { getMediaUrl } from '../../utils/media';
 import './Discovery.css';
 
 interface CandidateProfileModalProps {
@@ -61,7 +62,7 @@ export const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
         {/* HERO IMAGE SECTION */}
         <div className="candidate-modal-hero">
           <img
-            src={photos[activePhotoIndex].fileUrl}
+            src={getMediaUrl(photos[activePhotoIndex].fileUrl)}
             alt={`${profile.firstName}'s photo ${activePhotoIndex + 1}`}
             className="candidate-modal-img"
           />
@@ -77,7 +78,7 @@ export const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
                   onClick={() => setActivePhotoIndex(idx)}
                   aria-label={`View photo ${idx + 1}`}
                 >
-                  <img src={ph.fileUrl} alt={`Thumbnail ${idx + 1}`} />
+                  <img src={getMediaUrl(ph.fileUrl)} alt={`Thumbnail ${idx + 1}`} />
                 </button>
               ))}
             </div>

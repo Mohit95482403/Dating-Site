@@ -14,6 +14,7 @@ export interface ReceivedLikeItem {
   locationCity: string | null;
   locationCountry: string | null;
   primaryPhotoUrl: string | null;
+  avatarUrl: string | null;
   isSuperLike: boolean;
   likedAt: string;
 }
@@ -61,7 +62,7 @@ export class LikeService {
          p.location_city,
          p.location_country,
          TIMESTAMPDIFF(YEAR, p.date_of_birth, CURDATE()) as age,
-         (SELECT ph.file_url FROM photos ph WHERE ph.user_id = l.from_user_id AND ph.is_primary = TRUE LIMIT 1) as primary_photo_url,
+         (SELECT ph.file_url FROM photos ph WHERE ph.user_id = l.from_user_id ORDER BY ph.is_primary DESC, ph.display_order ASC, ph.id ASC LIMIT 1) as primary_photo_url,
          EXISTS (SELECT 1 FROM super_likes sl WHERE sl.from_user_id = l.from_user_id AND sl.to_user_id = l.to_user_id) as is_super_like
        FROM likes l
        JOIN users u ON l.from_user_id = u.id AND u.status = 'active'
@@ -83,6 +84,7 @@ export class LikeService {
       locationCity: r.location_city || null,
       locationCountry: r.location_country || null,
       primaryPhotoUrl: r.primary_photo_url || null,
+      avatarUrl: r.primary_photo_url || null,
       isSuperLike: Boolean(r.is_super_like),
       likedAt: new Date(r.liked_at).toISOString(),
     }));

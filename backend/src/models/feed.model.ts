@@ -180,7 +180,7 @@ export class FeedModel {
     const rows = await query<RowDataPacket[]>(
       `SELECT p.*, 
               pr.first_name, pr.last_name,
-              (SELECT file_url FROM photos WHERE user_id = p.user_id AND is_primary = 1 LIMIT 1) as photo_url
+              (SELECT file_url FROM photos WHERE user_id = p.user_id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url
        FROM posts p
        JOIN profiles pr ON pr.user_id = p.user_id
        WHERE p.id = ?`,
@@ -228,7 +228,7 @@ export class FeedModel {
     const posts = await query<RowDataPacket[]>(
       `SELECT p.*, 
               pr.first_name, pr.last_name,
-              (SELECT file_url FROM photos WHERE user_id = p.user_id AND is_primary = 1 LIMIT 1) as photo_url,
+              (SELECT file_url FROM photos WHERE user_id = p.user_id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url,
               (SELECT COUNT(*) > 0 FROM post_likes WHERE post_id = p.id AND user_id = ?) as is_liked,
               (SELECT COUNT(*) > 0 FROM post_bookmarks WHERE post_id = p.id AND user_id = ?) as is_bookmarked,
               (SELECT s.status FROM subscriptions s JOIN subscription_plans sp ON s.plan_id = sp.id 
@@ -278,7 +278,7 @@ export class FeedModel {
     const posts = await query<RowDataPacket[]>(
       `SELECT p.*, 
               pr.first_name, pr.last_name,
-              (SELECT file_url FROM photos WHERE user_id = p.user_id AND is_primary = 1 LIMIT 1) as photo_url,
+              (SELECT file_url FROM photos WHERE user_id = p.user_id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url,
               (SELECT COUNT(*) > 0 FROM post_likes WHERE post_id = p.id AND user_id = ?) as is_liked,
               (SELECT COUNT(*) > 0 FROM post_bookmarks WHERE post_id = p.id AND user_id = ?) as is_bookmarked,
               (SELECT s.status FROM subscriptions s JOIN subscription_plans sp ON s.plan_id = sp.id 
@@ -372,7 +372,7 @@ export class FeedModel {
     const comments = await query<RowDataPacket[]>(
       `SELECT c.*, 
               pr.first_name, pr.last_name,
-              (SELECT file_url FROM photos WHERE user_id = c.user_id AND is_primary = 1 LIMIT 1) as photo_url,
+              (SELECT file_url FROM photos WHERE user_id = c.user_id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url,
               (SELECT COUNT(*) > 0 FROM comment_likes WHERE comment_id = c.id AND user_id = ?) as is_liked
        FROM post_comments c
        JOIN profiles pr ON pr.user_id = c.user_id
@@ -387,7 +387,7 @@ export class FeedModel {
       const replies = await query<RowDataPacket[]>(
         `SELECT c.*, 
                 pr.first_name, pr.last_name,
-                (SELECT file_url FROM photos WHERE user_id = c.user_id AND is_primary = 1 LIMIT 1) as photo_url,
+                (SELECT file_url FROM photos WHERE user_id = c.user_id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url,
                 (SELECT COUNT(*) > 0 FROM comment_likes WHERE comment_id = c.id AND user_id = ?) as is_liked
          FROM post_comments c
          JOIN profiles pr ON pr.user_id = c.user_id
@@ -475,7 +475,7 @@ export class FeedModel {
     const posts = await query<RowDataPacket[]>(
       `SELECT p.*, 
               pr.first_name, pr.last_name,
-              (SELECT file_url FROM photos WHERE user_id = p.user_id AND is_primary = 1 LIMIT 1) as photo_url,
+              (SELECT file_url FROM photos WHERE user_id = p.user_id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url,
               1 as is_bookmarked,
               (SELECT COUNT(*) > 0 FROM post_likes WHERE post_id = p.id AND user_id = ?) as is_liked,
               (SELECT s.status FROM subscriptions s JOIN subscription_plans sp ON s.plan_id = sp.id 
@@ -551,7 +551,7 @@ export class FeedModel {
     const stories = await query<RowDataPacket[]>(
       `SELECT s.*, 
               pr.first_name, pr.last_name,
-              (SELECT file_url FROM photos WHERE user_id = s.user_id AND is_primary = 1 LIMIT 1) as photo_url,
+              (SELECT file_url FROM photos WHERE user_id = s.user_id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url,
               (SELECT COUNT(*) > 0 FROM story_views WHERE story_id = s.id AND user_id = ?) as is_viewed
        FROM stories s
        JOIN profiles pr ON pr.user_id = s.user_id
@@ -612,7 +612,7 @@ export class FeedModel {
   public static async getStoryById(storyId: number): Promise<RowDataPacket | null> {
     const rows = await query<RowDataPacket[]>(
       `SELECT s.*, pr.first_name, pr.last_name,
-              (SELECT file_url FROM photos WHERE user_id = s.user_id AND is_primary = 1 LIMIT 1) as photo_url
+              (SELECT file_url FROM photos WHERE user_id = s.user_id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) as photo_url
        FROM stories s
        JOIN profiles pr ON pr.user_id = s.user_id
        WHERE s.id = ?`,
