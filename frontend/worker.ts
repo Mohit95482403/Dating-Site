@@ -56,31 +56,39 @@ export default {
       });
     }
 
-    // 3. Direct root static files without extensions or root index
+    // 3. For root path '/' or '/index.html'
+    if (url.pathname === '/' || url.pathname === '/index.html') {
+      const rootRequest = new Request(new URL('/', request.url), request);
+      const rootResponse = await env.ASSETS.fetch(rootRequest);
+      const headers = new Headers(rootResponse.headers);
+      headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      headers.set('Content-Type', 'text/html; charset=utf-8');
+      headers.delete('Location');
+      return new Response(rootResponse.body, {
+        status: 200,
+        statusText: 'OK',
+        headers,
+      });
+    }
+
+    // 4. Try direct static asset fetch (e.g. static files without extension in public folder if any)
     const directResponse = await env.ASSETS.fetch(request);
-    if (directResponse.status !== 404) {
-      if (url.pathname === '/' || url.pathname === '/index.html') {
-        const headers = new Headers(directResponse.headers);
-        headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-        return new Response(directResponse.body, {
-          status: directResponse.status,
-          statusText: directResponse.statusText,
-          headers,
-        });
-      }
+    if (directResponse.status >= 200 && directResponse.status < 300) {
       return directResponse;
     }
 
-    // 4. SPA Fallback: client-side routing (e.g. /notifications, /messages, /explore, /dashboard)
-    // Rewriting cleanly to index.html with strict revalidation headers
-    const indexRequest = new Request(new URL('/index.html', request.url), request);
-    const indexResponse = await env.ASSETS.fetch(indexRequest);
-    const headers = new Headers(indexResponse.headers);
+    // 5. SPA Fallback: client-side routing (e.g. /notifications, /messages, /explore, /dashboard)
+    // Always fetch '/' from env.ASSETS to get the real index.html document (never '/index.html' which redirects with empty body)
+    const spaRequest = new Request(new URL('/', request.url), request);
+    const spaResponse = await env.ASSETS.fetch(spaRequest);
+    const headers = new Headers(spaResponse.headers);
     headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     headers.set('Content-Type', 'text/html; charset=utf-8');
+    headers.delete('Location');
 
-    return new Response(indexResponse.body, {
+    return new Response(spaResponse.body, {
       status: 200,
+      statusText: 'OK',
       headers,
     });
   },
