@@ -66,7 +66,7 @@ const AdminUsersPage = lazy(() => import('../pages/admin/UsersPage'));
 const AdminUserDetailsPage = lazy(() => import('../pages/admin/UserDetailsPage'));
 const AdminReportsPage = lazy(() => import('../pages/admin/ReportsPage'));
 const AdminVerificationPage = lazy(() => import('../pages/admin/VerificationPage'));
-const AdminNotificationsPage = lazy(() => import('../pages/admin/NotificationsPage'));
+const AdminNotificationsPage = lazy(() => import('../pages/admin/AdminNotificationsPage'));
 const AdminAuditLogsPage = lazy(() => import('../pages/admin/AuditLogsPage'));
 const AdminAnalyticsPage = lazy(() => import('../pages/admin/AnalyticsPage'));
 const AdminSubscriptionsPage = lazy(() => import('../pages/admin/SubscriptionsPage'));
