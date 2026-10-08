@@ -40,10 +40,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({
       {/* Sidebar Header */}
       <div className="chat-sidebar-header">
         <div className="chat-sidebar-title-row">
-          <h2 className="chat-sidebar-title">
-            <MessageSquare size={20} className="text-pink-500" />
-            <span>Messages</span>
-          </h2>
+          <div>
+            <h2 className="chat-sidebar-title">
+              <MessageSquare size={18} className="chat-title-icon" />
+              <span>Messages</span>
+            </h2>
+            <p className="chat-sidebar-subtitle">Stay connected</p>
+          </div>
           {totalUnread > 0 && (
             <span className="chat-sidebar-unread-pill">
               {totalUnread} new

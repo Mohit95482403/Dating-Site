@@ -30,11 +30,16 @@ export const MessagesPage: React.FC = () => {
     return conversationId ? parseInt(conversationId, 10) : null;
   }, [conversationId]);
 
-  // Set document title
+  // Set document title and attach immersive view body class
   useEffect(() => {
     document.title = activeConversation
       ? `Chat with ${activeConversation.otherUser.firstName} | Connectly`
       : 'Messages | Connectly Real-Time Chat';
+
+    document.body.classList.add('messages-immersive-view');
+    return () => {
+      document.body.classList.remove('messages-immersive-view');
+    };
   }, [activeConversation]);
 
   // Fetch all conversations for user

@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, Sparkles } from 'lucide-react';
+import { Sparkles, Heart } from 'lucide-react';
 import type { ConversationPartner } from '../../types/chat';
 import { getMediaUrl } from '../../utils/media';
 
@@ -17,12 +17,13 @@ export const ChatEmptyState: React.FC<ChatEmptyStateProps> = ({
   if (type === 'no-selection') {
     return (
       <div className="chat-no-selection-state">
-        <div className="chat-no-selection-icon">
-          <MessageSquare size={32} />
+        <div className="chat-no-selection-icon-wrap">
+          <div className="chat-no-selection-glow" />
+          <Heart size={34} className="chat-no-selection-heart" fill="currentColor" />
         </div>
-        <h3 className="chat-no-selection-title">Your Messages</h3>
+        <h3 className="chat-no-selection-title">Connect with someone</h3>
         <p className="chat-no-selection-desc">
-          Select a match from the conversation list to start chatting in real time.
+          Choose a conversation to start chatting in real time.
         </p>
       </div>
     );
