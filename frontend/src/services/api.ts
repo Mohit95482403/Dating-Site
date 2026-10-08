@@ -47,19 +47,30 @@ const baseURL = API_BASE_URL;
 
 export const api: AxiosInstance = axios.create({
   baseURL,
-  timeout: 15000,
+  timeout: 60000, // 60s accommodates Render container cold starts safely
   withCredentials: true, // Required for HTTP-only cookies
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request Interceptor: Attach JWT bearer token if present
+// Request Interceptor: Attach JWT bearer token if present, but NEVER on public auth endpoints
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = getAccessToken();
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const url = config.url || '';
+    const isPublicAuthRoute =
+      url.includes('/auth/login') ||
+      url.includes('/auth/register') ||
+      url.includes('/auth/forgot-password') ||
+      url.includes('/auth/reset-password');
+
+    if (!isPublicAuthRoute) {
+      const token = getAccessToken();
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } else if (config.headers?.Authorization) {
+      delete config.headers.Authorization;
     }
     return config;
   },
@@ -67,6 +78,18 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+/**
+ * Lightweight background ping to wake up sleeping Render instance when user lands on auth pages
+ */
+let hasPrewarmed = false;
+export const prewarmBackend = (): void => {
+  if (hasPrewarmed) return;
+  hasPrewarmed = true;
+  api.get('/health', { timeout: 35000 }).catch(() => {
+    // Non-blocking ping failure ignored
+  });
+};
 
 // Variables for token refresh queuing & loop prevention
 let isRefreshing = false;

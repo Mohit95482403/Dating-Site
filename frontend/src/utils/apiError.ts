@@ -7,11 +7,17 @@ import type { ApiError } from '../types/auth';
  */
 export function normalizeApiError(error: unknown): ApiError {
   if (axios.isAxiosError(error)) {
-    // Network error / backend offline
+    // Network error / backend offline / timeout
     if (!error.response) {
-      if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error') || error.code === 'ECONNABORTED') {
+      if (error.code === 'ECONNABORTED' || error.message?.toLowerCase().includes('timeout')) {
         return {
-          message: 'Unable to connect to Connectly. Please try again.',
+          message: 'Connecting to server took longer than expected. Please try again.',
+          status: 0,
+        };
+      }
+      if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
+        return {
+          message: 'Unable to connect to Connectly. Please check your network connection and try again.',
           status: 0,
         };
       }
@@ -22,7 +28,20 @@ export function normalizeApiError(error: unknown): ApiError {
     }
 
     const data = error.response.data as { message?: string; errors?: string[] } | undefined;
-    const message = data?.message || error.response.statusText || 'An unexpected error occurred.';
+    let message = data?.message;
+    if (!message) {
+      if (error.response.status === 401) {
+        message = 'Invalid email or password. Please check your credentials.';
+      } else if (error.response.status === 403) {
+        message = 'Access restricted. Please contact support.';
+      } else if (error.response.status === 429) {
+        message = 'Too many requests. Please wait a moment before trying again.';
+      } else if (error.response.status >= 500) {
+        message = 'Connectly server is temporarily busy. Please try again in a few seconds.';
+      } else {
+        message = error.response.statusText || 'An unexpected error occurred.';
+      }
+    }
     const errors = Array.isArray(data?.errors) ? data.errors : [];
     const fieldErrors: Record<string, string> = {};
 

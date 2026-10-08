@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { prewarmBackend } from '../services/api';
 import Container from '../components/common/Container';
 import Button from '../components/common/Button';
 import FormField from '../components/auth/FormField';
@@ -21,6 +22,12 @@ export const LoginPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const submittingRef = useRef<boolean>(false);
+
+  // Prewarm backend in background on mount so sleeping Render instance wakes up early
+  useEffect(() => {
+    prewarmBackend();
+  }, []);
 
   // Determine post-login redirect path
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
@@ -47,10 +54,16 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     setFormError(null);
 
-    if (!validate() || isSubmitting) {
+    // Prevent duplicate submissions immediately with synchronous ref check
+    if (submittingRef.current || isSubmitting) {
       return;
     }
 
+    if (!validate()) {
+      return;
+    }
+
+    submittingRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -72,6 +85,7 @@ export const LoginPage: React.FC = () => {
         setFieldErrors(apiErr.fieldErrors);
       }
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };

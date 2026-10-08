@@ -30,6 +30,8 @@ export const authService = {
    * POST /api/auth/login
    */
   async login(payload: LoginPayload): Promise<{ user: AuthUser; accessToken: string }> {
+    // Clear any stale access token before initiating login
+    setAccessToken(null);
     const response = await api.post<AuthResponse<AuthData>>('/auth/login', payload);
     const data = response.data.data;
     if (!data?.accessToken || !data?.user) {

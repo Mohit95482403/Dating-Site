@@ -13,6 +13,9 @@ const poolConfig: mysql.PoolOptions = {
   password,
   waitForConnections: true,
   connectionLimit: config.env.isProduction ? 10 : 15,
+  maxIdle: config.env.isProduction ? 10 : 15,
+  idleTimeout: 60000,
+  connectTimeout: 20000,
   queueLimit: 0,
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
@@ -28,21 +31,51 @@ if (process.env.DB_SSL === 'true') {
 
 export const pool = mysql.createPool(poolConfig);
 
+const isTransientConnError = (err: any): boolean => {
+  if (!err) return false;
+  const code = err.code || '';
+  return (
+    code === 'PROTOCOL_CONNECTION_LOST' ||
+    code === 'ECONNRESET' ||
+    code === 'ETIMEDOUT' ||
+    code === 'EPIPE' ||
+    code === 'PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR' ||
+    err.fatal === true
+  );
+};
 
 /**
- * Execute a parameterized SELECT query returning typed row arrays
+ * Execute a parameterized SELECT query returning typed row arrays with resilient connection retry
  */
 export async function query<T = RowDataPacket[]>(sql: string, params?: any[]): Promise<T> {
-  const [rows] = await pool.query(sql, params);
-  return rows as unknown as T;
+  try {
+    const [rows] = await pool.query(sql, params);
+    return rows as unknown as T;
+  } catch (err: any) {
+    if (isTransientConnError(err)) {
+      logger.warn(`[Database] Transient connection error (${err?.code}), retrying query with fresh connection...`);
+      const [retryRows] = await pool.query(sql, params);
+      return retryRows as unknown as T;
+    }
+    throw err;
+  }
 }
 
 /**
- * Execute a parameterized INSERT/UPDATE/DELETE query returning execution metadata (insertId, affectedRows, etc.)
+ * Execute a parameterized INSERT/UPDATE/DELETE query returning execution metadata with resilient connection retry
  */
 export async function execute(sql: string, params?: any[]): Promise<ResultSetHeader> {
-  const [result] = await pool.execute<ResultSetHeader>(sql, params);
-  return result;
+  try {
+    const [result] = await pool.execute<ResultSetHeader>(sql, params);
+    return result;
+  } catch (err: any) {
+    if (isTransientConnError(err)) {
+      logger.warn(`[Database] Transient connection error (${err?.code}), retrying execute with fresh connection...`);
+      const [retryResult] = await pool.execute<ResultSetHeader>(sql, params);
+      return retryResult;
+    }
+    throw err;
+  }
 }
 
 
