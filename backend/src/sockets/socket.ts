@@ -14,6 +14,7 @@ import { RowDataPacket } from 'mysql2/promise';
 import { MessageItem, ReactionGroup } from '../types/chat.types';
 
 let io: SocketIOServer | null = null;
+const getCallService = () => require('../services/call.service').CallService;
 
 export const initSocket = (httpServer: HttpServer): SocketIOServer => {
   io = new SocketIOServer(httpServer, socketConfig);
@@ -76,6 +77,14 @@ export const initSocket = (httpServer: HttpServer): SocketIOServer => {
       if (userId) {
         const isCompletelyOffline = SocketUserRegistry.removeUser(userId, socket.id);
         if (isCompletelyOffline) {
+          // Immediately cleanup any active or ringing call for this user
+          try {
+            const CallService = getCallService();
+            await CallService.handleUserDisconnect(userId);
+          } catch (callCleanErr) {
+            logger.warn(`[Socket] Error cleaning up calls on user ${userId} disconnect:`, callCleanErr);
+          }
+
           const nowIso = new Date().toISOString();
           try {
             await execute('UPDATE users SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?', [userId]);
@@ -263,11 +272,31 @@ export const initSocket = (httpServer: HttpServer): SocketIOServer => {
       }
     });
 
-    socket.on('call:leave', (payload: { callId: number }) => {
+    socket.on('call:leave', async (payload: { callId: number }) => {
       const callId = Number(payload?.callId);
       if (callId) {
         socket.leave(`call:${callId}`);
         logger.info(`[Socket] User ${userId} left room call:${callId}`);
+        if (userId) {
+          try {
+            const CallService = getCallService();
+            await CallService.handleUserLeaveRoom(callId, userId);
+          } catch (err) {
+            logger.warn(`[Socket] Error in handleUserLeaveRoom for call ${callId}:`, err);
+          }
+        }
+      }
+    });
+
+    socket.on('call:busy', async (payload: { callId: number }) => {
+      try {
+        const callId = Number(payload?.callId);
+        if (!callId || !userId) return;
+        logger.info(`[Socket] Callee user ${userId} signaled busy for call ${callId}`);
+        const CallService = getCallService();
+        await CallService.handleCalleeBusy(callId, userId);
+      } catch (err) {
+        logger.warn('[Socket] Error in call:busy socket handler:', err);
       }
     });
 

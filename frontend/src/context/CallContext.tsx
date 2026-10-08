@@ -131,6 +131,28 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setConnectionState('closed');
   }, []);
 
+  // Clean up on tab close / reload / navigation unload
+  useEffect(() => {
+    const handleUnload = () => {
+      const currentCall = activeCallRef.current;
+      if (currentCall && currentCall.id) {
+        try {
+          socketRef.current?.emit('call:leave', { callId: currentCall.id });
+        } catch {
+          // ignore
+        }
+      }
+      cleanupCall();
+    };
+
+    window.addEventListener('beforeunload', handleUnload);
+    window.addEventListener('pagehide', handleUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      window.removeEventListener('pagehide', handleUnload);
+    };
+  }, [cleanupCall]);
+
   // Initialize WebRTC instance on demand with fresh ref access
   const getOrCreateWebRTC = useCallback(() => {
     if (!webrtcRef.current) {
@@ -245,10 +267,15 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
           socketRef.current.emit('call:join', { callId: callRecord.id });
         }
       } catch (err: any) {
+        const status = err.response?.status;
         const msg = err.response?.data?.message || err.message || 'Failed to initiate call';
         console.error('[CallContext] Error starting call:', err);
         setErrorMessage(msg);
-        showToast(msg, 'error');
+        if (status === 409) {
+          showToast('This member is currently on another call.', 'warning');
+        } else {
+          showToast(msg, 'error');
+        }
         cleanupCall();
       }
     },
@@ -527,7 +554,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // 7. Call Busy
     const handleCallBusy = () => {
-      showToast('The person you are calling is currently on another call.', 'warning');
+      showToast('This member is currently on another call.', 'warning');
       cleanupCall();
     };
 

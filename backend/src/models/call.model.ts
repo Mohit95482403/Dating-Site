@@ -124,22 +124,94 @@ export class CallModel {
   }
 
   /**
-   * Find any currently active call ('ringing' or 'accepted') involving a user
+   * Find any currently active call ('ringing' or 'accepted') involving a user.
+   * Auto-cleans expired ringing calls (>35s) and abandoned accepted calls (>2h)
+   * to guarantee no false-positive busy detection.
    */
-  public static async findActiveCallForUser(userId: number): Promise<CallRecord | null> {
+  public static async findActiveCallForUser(
+    userId: number,
+    excludeCallerId?: number
+  ): Promise<CallRecord | null> {
     if (!Number.isInteger(userId) || userId <= 0) {
       return null;
     }
+
+    // 1. Auto-expire any ringing calls for this user that exceeded the 35s timeout
+    try {
+      await execute(
+        `UPDATE calls 
+         SET status = 'missed', ended_at = CURRENT_TIMESTAMP 
+         WHERE (caller_id = ? OR receiver_id = ?) 
+           AND status = 'ringing' 
+           AND started_at < NOW() - INTERVAL 35 SECOND`,
+        [userId, userId]
+      );
+    } catch {
+      // Non-fatal if auto-pruning fails
+    }
+
+    // 2. Fetch candidate calls
     const sql = `
       ${this.baseSelectSql()} 
       WHERE (c.caller_id = ? OR c.receiver_id = ?) 
         AND c.status IN ('ringing', 'accepted')
       ORDER BY c.id DESC
-      LIMIT 1
+      LIMIT 5
     `;
     const rows = await query<RowDataPacket[]>(sql, [userId, userId]);
     if (!rows || rows.length === 0) return null;
-    return this.mapRow(rows[0], userId);
+
+    for (const row of rows) {
+      const callId = Number(row.id);
+      const rowCallerId = Number(row.caller_id);
+      const startedAtMs = new Date(row.started_at).getTime();
+      const ageMs = Date.now() - startedAtMs;
+
+      // Ringing state evaluation
+      if (row.status === 'ringing') {
+        // If older than 35 seconds, it has expired -> mark missed and ignore
+        if (ageMs > 35000) {
+          await execute(
+            `UPDATE calls SET status = 'missed', ended_at = CURRENT_TIMESTAMP WHERE id = ?`,
+            [callId]
+          );
+          continue;
+        }
+
+        // If excludeCallerId matches row callerId, caller is re-attempting or retrying
+        // Auto-cancel that older ringing call so caller is never blocked by their own attempt
+        if (excludeCallerId && rowCallerId === excludeCallerId) {
+          await execute(
+            `UPDATE calls SET status = 'cancelled', ended_at = CURRENT_TIMESTAMP WHERE id = ?`,
+            [callId]
+          );
+          continue;
+        }
+
+        // Valid active ringing call with another user
+        return this.mapRow(row, userId);
+      }
+
+      // Accepted state evaluation
+      if (row.status === 'accepted') {
+        // If accepted call was started > 2 hours ago without completion, mark ended
+        if (ageMs > 2 * 60 * 60 * 1000) {
+          await execute(
+            `UPDATE calls 
+             SET status = 'ended', ended_at = CURRENT_TIMESTAMP, 
+                 duration = IF(answered_at IS NOT NULL, GREATEST(0, TIMESTAMPDIFF(SECOND, answered_at, CURRENT_TIMESTAMP())), 0)
+             WHERE id = ?`,
+            [callId]
+          );
+          continue;
+        }
+
+        // Valid active accepted call
+        return this.mapRow(row, userId);
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -260,6 +332,56 @@ export class CallModel {
     );
 
     return expiredCalls;
+  }
+
+  /**
+   * Complete startup cleanup to ensure no orphaned ringing or accepted calls
+   * survive server restarts or redeployments.
+   */
+  public static async cleanupStaleCallsOnStartup(): Promise<{ missedCount: number; endedCount: number }> {
+    try {
+      const ringingRes = await execute(
+        `UPDATE calls 
+         SET status = 'missed', ended_at = CURRENT_TIMESTAMP 
+         WHERE status = 'ringing'`
+      );
+
+      const acceptedRes = await execute(
+        `UPDATE calls 
+         SET status = 'ended', ended_at = CURRENT_TIMESTAMP,
+             duration = IF(answered_at IS NOT NULL, GREATEST(0, TIMESTAMPDIFF(SECOND, answered_at, CURRENT_TIMESTAMP())), 0)
+         WHERE status = 'accepted'`
+      );
+
+      return {
+        missedCount: ringingRes.affectedRows || 0,
+        endedCount: acceptedRes.affectedRows || 0,
+      };
+    } catch (err) {
+      return { missedCount: 0, endedCount: 0 };
+    }
+  }
+
+  /**
+   * Periodic sweep: clean any ringing calls older than 35s and accepted calls older than 2 hours
+   */
+  public static async cleanStaleCalls(): Promise<void> {
+    try {
+      await execute(
+        `UPDATE calls 
+         SET status = 'missed', ended_at = CURRENT_TIMESTAMP 
+         WHERE status = 'ringing' AND started_at < NOW() - INTERVAL 35 SECOND`
+      );
+
+      await execute(
+        `UPDATE calls 
+         SET status = 'ended', ended_at = CURRENT_TIMESTAMP,
+             duration = IF(answered_at IS NOT NULL, GREATEST(0, TIMESTAMPDIFF(SECOND, answered_at, CURRENT_TIMESTAMP())), 0)
+         WHERE status = 'accepted' AND started_at < NOW() - INTERVAL 2 HOUR`
+      );
+    } catch {
+      // Periodic sweep non-fatal
+    }
   }
 }
 

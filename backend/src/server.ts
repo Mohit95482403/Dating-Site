@@ -5,6 +5,7 @@ import { testDatabaseConnection, pool } from './config/database';
 import { initializeDatabase } from './config/databaseInit';
 import { initSocket, getIO } from './sockets/socket';
 import { logger } from './utils/logger';
+import { CallService } from './services/call.service';
 
 const PORT = config.env.port;
 
@@ -26,6 +27,9 @@ const startServer = async () => {
     const dbConnected = await testDatabaseConnection();
     if (dbConnected) {
       await initializeDatabase();
+      // Purge any stale ringing or accepted calls from prior server runs
+      await CallService.cleanupStaleCallsOnStartup();
+      CallService.startPeriodicCleanup();
     } else {
       logger.warn('MySQL Database connection could not be established at startup. Ensure MySQL server is running.');
     }
@@ -49,6 +53,7 @@ const startServer = async () => {
     const handleShutdown = async (signal: string) => {
       if (isShuttingDown) return;
       isShuttingDown = true;
+      CallService.stopPeriodicCleanup();
 
       logger.info(`[Shutdown] Received ${signal}. Initiating graceful shutdown...`);
 
