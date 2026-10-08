@@ -7,6 +7,7 @@ import { User, Users, LogOut, LayoutDashboard, Heart, Bell, Settings as Settings
 import { useSubscription } from '../../hooks/useSubscription';
 import PremiumBadge from '../premium/PremiumBadge';
 import { getMediaUrl } from '../../utils/media';
+import { getAccessToken } from '../../services/api';
 import MobileBottomNav from './MobileBottomNav';
 import './Navbar.css';
 
@@ -18,6 +19,25 @@ export const Navbar: React.FC = () => {
   const { isPremium, badge } = useSubscription();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Robust multi-source authentication check (prevents mobile drawer from flashing guest items)
+  const isAppRoute =
+    location.pathname.startsWith('/feed') ||
+    location.pathname.startsWith('/dashboard') ||
+    location.pathname.startsWith('/messages') ||
+    location.pathname.startsWith('/profile') ||
+    location.pathname.startsWith('/settings') ||
+    location.pathname.startsWith('/matches') ||
+    location.pathname.startsWith('/likes') ||
+    location.pathname.startsWith('/premium');
+
+  const isUserAuthenticated = Boolean(
+    isAuthenticated ||
+    user ||
+    getAccessToken() ||
+    (typeof window !== 'undefined' && localStorage.getItem('connectly_access_token')) ||
+    isAppRoute
+  );
 
   useEffect(() => {
     let ticking = false;
@@ -38,6 +58,17 @@ export const Navbar: React.FC = () => {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
+
+  // Lock background page scroll when mobile drawer is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [mobileMenuOpen]);
 
   const handleLogout = async () => {
     await logout();
@@ -222,7 +253,7 @@ export const Navbar: React.FC = () => {
           />
           <div className="mobile-drawer-sheet" role="dialog" aria-modal="true" aria-label="Navigation Menu">
             <div className="mobile-drawer-header">
-              {isAuthenticated ? (
+              {isUserAuthenticated ? (
                 <div className="mobile-drawer-user-info">
                   <div className="mobile-drawer-avatar">
                     {user?.avatarUrl ? (
@@ -233,10 +264,10 @@ export const Navbar: React.FC = () => {
                   </div>
                   <div className="mobile-drawer-user-text">
                     <div className="mobile-drawer-user-name">
-                      {user?.firstName} {user?.lastName || ''}
+                      {user?.firstName || 'Account'} {user?.lastName || ''}
                       {badge && <PremiumBadge badge={badge} size="sm" />}
                     </div>
-                    <div className="mobile-drawer-user-email">{user?.email}</div>
+                    {user?.email && <div className="mobile-drawer-user-email">{user.email}</div>}
                   </div>
                 </div>
               ) : (
@@ -255,77 +286,159 @@ export const Navbar: React.FC = () => {
             </div>
 
             <div className="mobile-drawer-content">
-              {isAuthenticated ? (
+              {isUserAuthenticated ? (
                 <>
                   <div className="mobile-drawer-section-title">Experience</div>
-                  <Link to="/premium" className="mobile-drawer-item mobile-item-premium">
+                  {/* 1. Connectly Premium */}
+                  <Link
+                    to="/premium"
+                    className="mobile-drawer-item mobile-item-premium"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
                     <Sparkles size={18} />
                     <span>Connectly Premium</span>
                     <span className="mobile-drawer-pill-gold">{isPremium ? 'Active' : 'Upgrade'}</span>
                   </Link>
-                  <Link to="/explore/communities" className="mobile-drawer-item">
+
+                  {/* 2. Communities */}
+                  <Link
+                    to="/explore/communities"
+                    className="mobile-drawer-item"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
                     <Users size={18} />
-                    <span>Communities &amp; Groups</span>
+                    <span>Communities</span>
                   </Link>
-                  <Link to="/matches" className="mobile-drawer-item">
+
+                  {/* 3. Matches */}
+                  <Link
+                    to="/matches"
+                    className="mobile-drawer-item"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
                     <Heart size={18} />
                     <span>Matches</span>
                     {matchCount > 0 && <span className="mobile-drawer-count">{matchCount}</span>}
                   </Link>
-                  <Link to="/likes/received" className="mobile-drawer-item">
+
+                  {/* 4. Who Liked You */}
+                  <Link
+                    to="/likes/received"
+                    className="mobile-drawer-item"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
                     <Heart size={18} />
                     <span>Who Liked You</span>
                   </Link>
 
                   <div className="mobile-drawer-section-title">Account</div>
-                  <Link to="/dashboard" className="mobile-drawer-item">
+                  {/* 5. Dashboard */}
+                  <Link
+                    to="/dashboard"
+                    className="mobile-drawer-item"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
                     <LayoutDashboard size={18} />
                     <span>Dashboard</span>
                   </Link>
-                  <Link to="/profile" className="mobile-drawer-item">
+
+                  {/* 6. My Profile */}
+                  <Link
+                    to="/profile"
+                    className="mobile-drawer-item"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
                     <User size={18} />
                     <span>My Profile</span>
                   </Link>
-                  <Link to="/settings" className="mobile-drawer-item">
+
+                  {/* 7. Settings & Privacy */}
+                  <Link
+                    to="/settings"
+                    className="mobile-drawer-item"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
                     <SettingsIcon size={18} />
                     <span>Settings &amp; Privacy</span>
                   </Link>
+
+                  {/* Admin Console (for Admin role) */}
                   {user?.role === 'admin' && (
-                    <Link to="/admin" className="mobile-drawer-item mobile-item-admin">
+                    <Link
+                      to="/admin"
+                      className="mobile-drawer-item mobile-item-admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
                       <Shield size={18} />
                       <span>Admin Console</span>
                     </Link>
                   )}
 
                   <div className="mobile-drawer-divider" />
-                  <button type="button" className="mobile-drawer-item mobile-item-logout" onClick={handleLogout}>
+                  {/* 8. Sign Out */}
+                  <button
+                    type="button"
+                    className="mobile-drawer-item mobile-item-logout"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                  >
                     <LogOut size={18} />
                     <span>Sign Out</span>
                   </button>
                 </>
               ) : (
                 <>
-                  <Link to="/" className="mobile-drawer-item">
+                  <Link
+                    to="/"
+                    className="mobile-drawer-item"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
                     <span>Home</span>
                   </Link>
-                  <Link to="/discover" className="mobile-drawer-item">
+                  <Link
+                    to="/discover"
+                    className="mobile-drawer-item"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
                     <span>Discover Profiles</span>
                   </Link>
-                  <Link to="/how-it-works" className="mobile-drawer-item">
+                  <Link
+                    to="/how-it-works"
+                    className="mobile-drawer-item"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
                     <span>How It Works</span>
                   </Link>
-                  <Link to="/safety" className="mobile-drawer-item">
+                  <Link
+                    to="/safety"
+                    className="mobile-drawer-item"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
                     <span>Safety &amp; Trust</span>
                   </Link>
-                  <Link to="/about" className="mobile-drawer-item">
+                  <Link
+                    to="/about"
+                    className="mobile-drawer-item"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
                     <span>About Connectly</span>
                   </Link>
                   <div className="mobile-drawer-divider" />
                   <div className="mobile-drawer-auth-buttons">
-                    <Link to="/login" style={{ width: '100%' }}>
+                    <Link
+                      to="/login"
+                      style={{ width: '100%' }}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
                       <Button variant="secondary" fullWidth size="md">Log In</Button>
                     </Link>
-                    <Link to="/register" style={{ width: '100%' }}>
+                    <Link
+                      to="/register"
+                      style={{ width: '100%' }}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
                       <Button variant="primary" fullWidth size="md">Get Started</Button>
                     </Link>
                   </div>
