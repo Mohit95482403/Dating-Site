@@ -521,6 +521,16 @@ img, svg {
   box-sizing: border-box;
 }
 
+@media (max-width: 768px) {
+  .app-main-content {
+    padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body.messages-immersive-view .app-main-content {
+    padding-bottom: 0 !important;
+  }
+}
+
 .page-suspense-fallback {
   flex: 1 0 auto;
   min-height: calc(100vh - 72px);

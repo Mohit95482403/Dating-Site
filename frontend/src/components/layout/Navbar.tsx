@@ -3,10 +3,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Button from '../common/Button';
 import { useAuth } from '../../hooks/useAuth';
 import { useSocket } from '../../hooks/useSocket';
-import { User, Users, LogOut, LayoutDashboard, Heart, Compass, MessageSquare, Bell, Settings as SettingsIcon, Shield, Sparkles } from 'lucide-react';
+import { User, Users, LogOut, LayoutDashboard, Heart, Bell, Settings as SettingsIcon, Shield, Sparkles, X } from 'lucide-react';
 import { useSubscription } from '../../hooks/useSubscription';
 import PremiumBadge from '../premium/PremiumBadge';
 import { getMediaUrl } from '../../utils/media';
+import MobileBottomNav from './MobileBottomNav';
 import './Navbar.css';
 
 export const Navbar: React.FC = () => {
@@ -44,7 +45,8 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <header className={`navbar-header ${scrolled ? 'scrolled' : ''}`}>
+    <>
+      <header className={`navbar-header ${scrolled ? 'scrolled' : ''}`}>
       <div className="navbar-container">
         {/* Brand Logo */}
         <Link to="/" className="navbar-brand">
@@ -181,6 +183,23 @@ export const Navbar: React.FC = () => {
             </>
           )}
 
+          {/* Mobile header controls */}
+          {isAuthenticated && (
+            <Link
+              to="/notifications"
+              className={`mobile-top-bell-btn ${location.pathname.startsWith('/notifications') ? 'active' : ''}`}
+              aria-label="Activity & Notifications"
+              title="Activity & Notifications"
+            >
+              <Bell size={19} strokeWidth={location.pathname.startsWith('/notifications') ? 2.4 : 1.9} />
+              {unreadNotificationCount > 0 && (
+                <span className="mobile-top-bell-badge">
+                  {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                </span>
+              )}
+            </Link>
+          )}
+
           {/* Mobile hamburger button */}
           <button 
             type="button" 
@@ -193,102 +212,133 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Modern Mobile Slide-In Glass Drawer */}
       {mobileMenuOpen && (
-        <div className="mobile-dropdown glass-panel">
-          <Link to="/" className="mobile-nav-link">Home</Link>
-          <Link to="/how-it-works" className="mobile-nav-link">How It Works</Link>
-          <Link to="/safety" className="mobile-nav-link">Safety & Trust</Link>
-          <Link to="/about" className="mobile-nav-link">About Connectly</Link>
-          <Link to="/discover" className="mobile-nav-link">Discover Profiles</Link>
-
-          {isAuthenticated ? (
-            <div className="mobile-actions">
-              <Link to="/premium" style={{ width: '100%' }}>
-                <Button variant="secondary" fullWidth size="md" style={{ color: isPremium ? '#f472b6' : '#f59e0b', borderColor: isPremium ? 'rgba(236,72,153,0.4)' : 'rgba(245,158,11,0.4)' }}>
-                  <Sparkles size={16} /> Connectly Premium {badge ? `(${badge})` : ''}
-                </Button>
-              </Link>
-              <Link to="/feed" style={{ width: '100%' }}>
-                <Button variant="secondary" fullWidth size="md">
-                  <Sparkles size={16} /> Feed & Stories
-                </Button>
-              </Link>
-              <Link to="/explore" style={{ width: '100%' }}>
-                <Button variant="secondary" fullWidth size="md">
-                  <Compass size={16} /> Explore &amp; Trending
-                </Button>
-              </Link>
-              <Link to="/explore/communities" style={{ width: '100%' }}>
-                <Button variant="secondary" fullWidth size="md">
-                  <Users size={16} /> Communities &amp; Groups
-                </Button>
-              </Link>
-              <Link to="/likes/received" style={{ width: '100%' }}>
-                <Button variant="secondary" fullWidth size="md">
-                  <Heart size={16} /> Who Liked You
-                </Button>
-              </Link>
-              <Link to="/matches" style={{ width: '100%' }}>
-                <Button variant="secondary" fullWidth size="md">
-                  <Heart size={16} /> Matches {matchCount > 0 ? `(${matchCount})` : ''}
-                </Button>
-              </Link>
-              <Link to="/messages" style={{ width: '100%' }}>
-                <Button variant="secondary" fullWidth size="md">
-                  <MessageSquare size={16} /> Messages {unreadMessageCount > 0 ? `(${unreadMessageCount})` : ''}
-                </Button>
-              </Link>
-              <Link to="/notifications" style={{ width: '100%' }}>
-                <Button variant="secondary" fullWidth size="md">
-                  <Bell size={16} /> Activity & Notifications {unreadNotificationCount > 0 ? `(${unreadNotificationCount})` : ''}
-                </Button>
-              </Link>
-              <Link to="/discover" style={{ width: '100%' }}>
-                <Button variant="secondary" fullWidth size="md">
-                  <Compass size={16} /> Discover Profiles
-                </Button>
-              </Link>
-              <Link to="/dashboard" style={{ width: '100%' }}>
-                <Button variant="secondary" fullWidth size="md">
-                  <LayoutDashboard size={16} /> Dashboard ({user?.firstName})
-                </Button>
-              </Link>
-              <Link to="/profile" style={{ width: '100%' }}>
-                <Button variant="secondary" fullWidth size="md">
-                  <User size={16} /> My Profile
-                </Button>
-              </Link>
-              <Link to="/settings" style={{ width: '100%' }}>
-                <Button variant="secondary" fullWidth size="md">
-                  <SettingsIcon size={16} /> Settings &amp; Privacy
-                </Button>
-              </Link>
-              {user?.role === 'admin' && (
-                <Link to="/admin" style={{ width: '100%' }}>
-                  <Button variant="secondary" fullWidth size="md" style={{ color: '#818cf8', borderColor: 'rgba(99,102,241,0.4)' }}>
-                    <Shield size={16} /> Admin Console
-                  </Button>
-                </Link>
+        <>
+          <div
+            className="mobile-drawer-backdrop"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+          <div className="mobile-drawer-sheet" role="dialog" aria-modal="true" aria-label="Navigation Menu">
+            <div className="mobile-drawer-header">
+              {isAuthenticated ? (
+                <div className="mobile-drawer-user-info">
+                  <div className="mobile-drawer-avatar">
+                    {user?.avatarUrl ? (
+                      <img src={getMediaUrl(user.avatarUrl)} alt={user.firstName || 'Profile'} />
+                    ) : (
+                      <User size={18} />
+                    )}
+                  </div>
+                  <div className="mobile-drawer-user-text">
+                    <div className="mobile-drawer-user-name">
+                      {user?.firstName} {user?.lastName || ''}
+                      {badge && <PremiumBadge badge={badge} size="sm" />}
+                    </div>
+                    <div className="mobile-drawer-user-email">{user?.email}</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mobile-drawer-brand">
+                  <span className="brand-title">Connectly</span>
+                </div>
               )}
-              <Button variant="ghost" fullWidth size="md" onClick={handleLogout}>
-                <LogOut size={16} /> Sign Out
-              </Button>
+              <button
+                type="button"
+                className="mobile-drawer-close-btn"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Close navigation menu"
+              >
+                <X size={20} />
+              </button>
             </div>
-          ) : (
-            <div className="mobile-actions">
-              <Link to="/login" style={{ width: '100%' }}>
-                <Button variant="secondary" fullWidth size="md">Log In</Button>
-              </Link>
-              <Link to="/register" style={{ width: '100%' }}>
-                <Button variant="primary" fullWidth size="md">Get Started</Button>
-              </Link>
+
+            <div className="mobile-drawer-content">
+              {isAuthenticated ? (
+                <>
+                  <div className="mobile-drawer-section-title">Experience</div>
+                  <Link to="/premium" className="mobile-drawer-item mobile-item-premium">
+                    <Sparkles size={18} />
+                    <span>Connectly Premium</span>
+                    <span className="mobile-drawer-pill-gold">{isPremium ? 'Active' : 'Upgrade'}</span>
+                  </Link>
+                  <Link to="/explore/communities" className="mobile-drawer-item">
+                    <Users size={18} />
+                    <span>Communities &amp; Groups</span>
+                  </Link>
+                  <Link to="/matches" className="mobile-drawer-item">
+                    <Heart size={18} />
+                    <span>Matches</span>
+                    {matchCount > 0 && <span className="mobile-drawer-count">{matchCount}</span>}
+                  </Link>
+                  <Link to="/likes/received" className="mobile-drawer-item">
+                    <Heart size={18} />
+                    <span>Who Liked You</span>
+                  </Link>
+
+                  <div className="mobile-drawer-section-title">Account</div>
+                  <Link to="/dashboard" className="mobile-drawer-item">
+                    <LayoutDashboard size={18} />
+                    <span>Dashboard</span>
+                  </Link>
+                  <Link to="/profile" className="mobile-drawer-item">
+                    <User size={18} />
+                    <span>My Profile</span>
+                  </Link>
+                  <Link to="/settings" className="mobile-drawer-item">
+                    <SettingsIcon size={18} />
+                    <span>Settings &amp; Privacy</span>
+                  </Link>
+                  {user?.role === 'admin' && (
+                    <Link to="/admin" className="mobile-drawer-item mobile-item-admin">
+                      <Shield size={18} />
+                      <span>Admin Console</span>
+                    </Link>
+                  )}
+
+                  <div className="mobile-drawer-divider" />
+                  <button type="button" className="mobile-drawer-item mobile-item-logout" onClick={handleLogout}>
+                    <LogOut size={18} />
+                    <span>Sign Out</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/" className="mobile-drawer-item">
+                    <span>Home</span>
+                  </Link>
+                  <Link to="/discover" className="mobile-drawer-item">
+                    <span>Discover Profiles</span>
+                  </Link>
+                  <Link to="/how-it-works" className="mobile-drawer-item">
+                    <span>How It Works</span>
+                  </Link>
+                  <Link to="/safety" className="mobile-drawer-item">
+                    <span>Safety &amp; Trust</span>
+                  </Link>
+                  <Link to="/about" className="mobile-drawer-item">
+                    <span>About Connectly</span>
+                  </Link>
+                  <div className="mobile-drawer-divider" />
+                  <div className="mobile-drawer-auth-buttons">
+                    <Link to="/login" style={{ width: '100%' }}>
+                      <Button variant="secondary" fullWidth size="md">Log In</Button>
+                    </Link>
+                    <Link to="/register" style={{ width: '100%' }}>
+                      <Button variant="primary" fullWidth size="md">Get Started</Button>
+                    </Link>
+                  </div>
+                </>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        </>
       )}
     </header>
-  );
+    <MobileBottomNav />
+  </>
+);
 };
 
 export default Navbar;
