@@ -14,6 +14,10 @@ import type {
   CallSignalPayload,
 } from '../types/call';
 import { useToast } from './ToastContext';
+import {
+  routeAudioToDefault,
+  routeAudioToSpeaker,
+} from '../utils/audioRouting';
 
 export type CallUIState =
   | 'idle'
@@ -34,6 +38,7 @@ interface CallContextValue {
   isCameraOff: boolean;
   isRemoteMuted: boolean;
   isRemoteCameraOff: boolean;
+  isSpeakerOn: boolean;
   callDuration: number;
   connectionState: WebRTCConnectionState;
   errorMessage: string | null;
@@ -50,6 +55,8 @@ interface CallContextValue {
   endCall: () => Promise<void>;
   toggleMute: () => void;
   toggleCamera: () => void;
+  toggleSpeaker: () => Promise<boolean>;
+  registerAudioOutput: (element: HTMLMediaElement | null) => void;
   clearError: () => void;
 }
 
@@ -71,6 +78,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isRemoteMuted, setIsRemoteMuted] = useState(false);
   const [isRemoteCameraOff, setIsRemoteCameraOff] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
+  const [isSpeakerOn, setIsSpeakerOn] = useState(false);
   const [connectionState, setConnectionState] = useState<WebRTCConnectionState>('closed');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -85,6 +93,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const callTypeRef = useRef<CallType>('audio');
   const callStateRef = useRef<CallUIState>('idle');
   const hasCreatedOfferRef = useRef<boolean>(false);
+  const audioOutputElementRef = useRef<HTMLMediaElement | null>(null);
 
   useEffect(() => {
     activeCallRef.current = activeCall;
@@ -110,6 +119,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const cleanupCall = useCallback(() => {
     hasCreatedOfferRef.current = false;
     activeCallRef.current = null;
+    audioOutputElementRef.current = null;
     if (durationTimerRef.current) {
       clearInterval(durationTimerRef.current);
       durationTimerRef.current = null;
@@ -127,6 +137,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsCameraOff(false);
     setIsRemoteMuted(false);
     setIsRemoteCameraOff(false);
+    setIsSpeakerOn(false);
     setCallDuration(0);
     setConnectionState('closed');
   }, []);
@@ -235,6 +246,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       callTypeRef.current = type;
       setPartner(partnerInfo);
       setCallState('calling');
+      setIsSpeakerOn(false);
       hasCreatedOfferRef.current = false;
 
       try {
@@ -309,6 +321,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setCallType(targetCallType);
       callTypeRef.current = targetCallType;
+      setIsSpeakerOn(false);
 
       // 1. Acquire local media (ensure video is acquired for video call)
       console.log(`[WebRTC] Receiver acquiring local media for incoming ${targetCallType} call...`);
@@ -447,6 +460,39 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [callType, socket, activeCall, currentUserId, isMuted]);
 
+  const registerAudioOutput = useCallback((element: HTMLMediaElement | null) => {
+    audioOutputElementRef.current = element;
+    if (element && !isSpeakerOn) {
+      routeAudioToDefault(element);
+    }
+  }, [isSpeakerOn]);
+
+  const toggleSpeaker = useCallback(async (): Promise<boolean> => {
+    const el = audioOutputElementRef.current;
+    if (!isSpeakerOn) {
+      const res = await routeAudioToSpeaker(el);
+      if (res.success) {
+        setIsSpeakerOn(true);
+        showToast('Speakerphone ON', 'info');
+        return true;
+      } else {
+        if (res.reason === 'unsupported') {
+          showToast('Speakerphone switching is not supported by your browser.', 'info');
+        } else if (res.reason === 'no_speaker_device') {
+          showToast('No separate speakerphone device detected on this device.', 'info');
+        } else {
+          showToast('Unable to switch to speakerphone.', 'error');
+        }
+        return false;
+      }
+    } else {
+      await routeAudioToDefault(el);
+      setIsSpeakerOn(false);
+      showToast('Speakerphone OFF', 'info');
+      return true;
+    }
+  }, [isSpeakerOn, showToast]);
+
   const clearError = useCallback(() => {
     setErrorMessage(null);
   }, []);
@@ -504,6 +550,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       callTypeRef.current = resolvedCallType;
       setPartner(safeCaller);
       setCallState('incoming');
+      setIsSpeakerOn(false);
     };
 
     // 2. Call Accepted (Received by caller)
@@ -732,6 +779,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isCameraOff,
       isRemoteMuted,
       isRemoteCameraOff,
+      isSpeakerOn,
       callDuration,
       connectionState,
       errorMessage,
@@ -742,6 +790,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       endCall,
       toggleMute,
       toggleCamera,
+      toggleSpeaker,
+      registerAudioOutput,
       clearError,
     }),
     [
@@ -755,6 +805,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isCameraOff,
       isRemoteMuted,
       isRemoteCameraOff,
+      isSpeakerOn,
       callDuration,
       connectionState,
       errorMessage,
@@ -765,6 +816,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       endCall,
       toggleMute,
       toggleCamera,
+      toggleSpeaker,
+      registerAudioOutput,
       clearError,
     ]
   );

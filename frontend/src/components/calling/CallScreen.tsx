@@ -9,6 +9,7 @@ import {
   VideoOff,
   PhoneOff,
   Volume2,
+  Volume1,
 } from 'lucide-react';
 import { useCall } from '../../context/CallContext';
 import { getMediaUrl } from '../../utils/media';
@@ -25,15 +26,19 @@ export const CallScreen: React.FC = () => {
     isCameraOff,
     isRemoteMuted,
     isRemoteCameraOff,
+    isSpeakerOn,
     callDuration,
     connectionState,
     toggleMute,
     toggleCamera,
+    toggleSpeaker,
+    registerAudioOutput,
     endCall,
   } = useCall();
 
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Determine if streams have active, live video tracks
   const hasRemoteVideo = Boolean(
@@ -238,6 +243,8 @@ export const CallScreen: React.FC = () => {
           {remoteStream && (
             <audio
               ref={(el) => {
+                remoteAudioRef.current = el;
+                registerAudioOutput(el);
                 if (el && remoteStream && el.srcObject !== remoteStream) {
                   el.srcObject = remoteStream;
                   el.play().catch((err) => console.warn('[CallScreen] Remote audio autoplay notice:', err));
@@ -262,6 +269,19 @@ export const CallScreen: React.FC = () => {
         >
           {isMuted ? <MicOff size={22} /> : <Mic size={22} />}
         </button>
+
+        {/* Speakerphone Toggle (Available on Audio Calls) */}
+        {callType === 'audio' && (
+          <button
+            type="button"
+            className={`call-ctrl-btn speaker-btn ${isSpeakerOn ? 'active-speaker' : ''}`}
+            onClick={toggleSpeaker}
+            aria-label={isSpeakerOn ? 'Turn off speakerphone' : 'Turn on speakerphone'}
+            title={isSpeakerOn ? 'Speakerphone ON (tap to turn off)' : 'Speakerphone OFF (tap to turn on)'}
+          >
+            {isSpeakerOn ? <Volume2 size={22} /> : <Volume1 size={22} />}
+          </button>
+        )}
 
         {/* Camera Toggle (Video Call Only) */}
         {callType === 'video' && (
