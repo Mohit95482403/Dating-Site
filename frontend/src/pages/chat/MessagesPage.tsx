@@ -156,7 +156,10 @@ export const MessagesPage: React.FC = () => {
 
       setConversations((prev) => {
         const targetIndex = prev.findIndex((c) => c.conversationId === convId);
-        if (targetIndex === -1) return prev;
+        if (targetIndex === -1) {
+          fetchConversations();
+          return prev;
+        }
 
         const target = prev[targetIndex];
         const isCurrentActive = activeConversation?.conversationId === convId;
@@ -260,6 +263,7 @@ export const MessagesPage: React.FC = () => {
 
         {/* Main Panel: Active Chat Window or Placeholder */}
         <ChatWindow
+          key={activeConversation ? `chat-${activeConversation.conversationId}` : 'chat-empty'}
           conversation={activeConversation}
           onBackMobile={handleBackMobile}
           onUpdateConversation={handleUpdateConversation}

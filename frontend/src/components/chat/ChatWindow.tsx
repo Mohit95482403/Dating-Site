@@ -22,6 +22,11 @@ interface ChatWindowProps {
   isMobileHidden?: boolean;
 }
 
+const isDuplicateMessage = (list: MessageItem[], targetId: number | string): boolean => {
+  const num = Number(targetId);
+  return !isNaN(num) && list.some((m) => Number(m.id) === num);
+};
+
 export const ChatWindow: React.FC<ChatWindowProps> = ({
   conversation,
   onBackMobile,
@@ -54,6 +59,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     currentUserIdRef.current = currentUserId;
   }, [currentUserId]);
 
+  // Immediately clear messages and state when switching conversations
+  useEffect(() => {
+    setMessages([]);
+    setHasMore(false);
+    setNextCursor(null);
+    setError(null);
+    setIsPartnerTyping(false);
+  }, [conversation?.conversationId]);
+
   // Sync initial presence when conversation changes
   useEffect(() => {
     if (conversation?.otherUser) {
@@ -73,10 +87,24 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
     try {
       const data = await chatService.getMessages(conversation.conversationId, { limit: 30 });
-      const normalizedMessages = (data.messages || []).map((m) => ({
-        ...m,
-        isFromMe: isMessageFromCurrentUser(m.senderId, currentUserIdRef.current),
-      }));
+      const rawMessages = data.messages || [];
+      const seenIds = new Set<number>();
+      const normalizedMessages: MessageItem[] = [];
+
+      for (const m of rawMessages) {
+        const idNum = Number(m.id);
+        if (!isNaN(idNum) && !seenIds.has(idNum)) {
+          seenIds.add(idNum);
+          normalizedMessages.push({
+            ...m,
+            id: idNum,
+            conversationId: Number(m.conversationId || conversation.conversationId),
+            senderId: Number(m.senderId),
+            isFromMe: isMessageFromCurrentUser(m.senderId, currentUserIdRef.current),
+          });
+        }
+      }
+
       setMessages(normalizedMessages);
       setHasMore(data.hasMore);
       setNextCursor(data.nextCursor ?? null);
@@ -108,16 +136,19 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
     // 1. Handle incoming message
     const handleNewMessage = (payload: { conversationId: number; message: MessageItem }) => {
-      if (payload.conversationId !== convId) return;
+      if (Number(payload.conversationId) !== Number(convId)) return;
 
       const isFromCurrent = isMessageFromCurrentUser(payload.message.senderId, currentUserIdRef.current);
       const normalizedMsg: MessageItem = {
         ...payload.message,
+        id: Number(payload.message.id),
+        conversationId: Number(payload.message.conversationId || convId),
+        senderId: Number(payload.message.senderId),
         isFromMe: isFromCurrent,
       };
 
       setMessages((prev) => {
-        if (prev.some((m) => m.id === normalizedMsg.id)) {
+        if (isDuplicateMessage(prev, normalizedMsg.id)) {
           return prev;
         }
         return [...prev, normalizedMsg];
@@ -242,12 +273,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
       const normalizedOlder = (data.messages || []).map((m) => ({
         ...m,
+        id: Number(m.id),
+        conversationId: Number(m.conversationId || conversation.conversationId),
+        senderId: Number(m.senderId),
         isFromMe: isMessageFromCurrentUser(m.senderId, currentUserIdRef.current),
       }));
 
       setMessages((prev) => {
-        const existingIds = new Set(prev.map((m) => m.id));
-        const uniqueOlder = normalizedOlder.filter((m) => !existingIds.has(m.id));
+        const existingIds = new Set(prev.map((m) => Number(m.id)));
+        const uniqueOlder = normalizedOlder.filter((m) => !existingIds.has(Number(m.id)));
         return [...uniqueOlder, ...prev];
       });
 
@@ -268,12 +302,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       const createdMessage = await chatService.sendMessage(conversation.conversationId, content);
       const normalizedMsg: MessageItem = {
         ...createdMessage,
-        senderId: createdMessage.senderId ?? (currentUserIdRef.current as number),
+        id: Number(createdMessage.id),
+        conversationId: Number(createdMessage.conversationId || conversation.conversationId),
+        senderId: Number(createdMessage.senderId ?? currentUserIdRef.current ?? 0),
         isFromMe: true,
       };
 
       setMessages((prev) => {
-        if (prev.some((m) => m.id === normalizedMsg.id)) {
+        if (isDuplicateMessage(prev, normalizedMsg.id)) {
           return prev;
         }
         return [...prev, normalizedMsg];

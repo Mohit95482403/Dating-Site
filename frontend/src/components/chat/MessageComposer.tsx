@@ -41,6 +41,12 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
     }
   }, [content]);
 
+  // Reset composer state when switching conversations
+  useEffect(() => {
+    setContent('');
+    setIsSending(false);
+  }, [conversationId]);
+
   // Handle typing detection with debounce
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;

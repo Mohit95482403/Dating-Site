@@ -545,12 +545,14 @@ export const emitNewMessage = (
     if (!io) return;
     const cleanMessage: MessageItem = {
       ...message,
+      id: Number(message.id),
+      conversationId: Number(message.conversationId || conversationId),
       senderId: Number(message.senderId),
     };
 
     // Broadcast to active conversation room
     io.to(`conversation:${conversationId}`).emit('message:new', {
-      conversationId,
+      conversationId: Number(conversationId),
       message: cleanMessage,
     });
 
