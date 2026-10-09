@@ -7,6 +7,7 @@ export interface AudioRoutingResult {
   reason?: 'unsupported' | 'no_speaker_device' | 'error' | 'no_element';
   deviceId?: string;
   deviceLabel?: string;
+  guaranteedEarpiece?: boolean;
   error?: any;
 }
 
@@ -42,8 +43,9 @@ export async function getAudioOutputDevices(): Promise<MediaDeviceInfo[]> {
 }
 
 /**
- * Routes audio element to the default private-call output (earpiece / default communications sink).
- * Always safe to call - will not throw or break audio playback.
+ * Routes audio element to the default output sink.
+ * Note: In standard mobile web browsers, setSinkId('') selects the system default output
+ * and cannot guarantee private earpiece playback due to OS-level media routing restrictions.
  */
 export async function routeAudioToDefault(
   element: HTMLMediaElement | null
@@ -53,38 +55,52 @@ export async function routeAudioToDefault(
   }
 
   if (!isSinkIdSupported()) {
-    console.log('[AudioRouting] setSinkId not supported by runtime; using platform default routing');
-    return { success: false, reason: 'unsupported' };
+    console.log('[AudioRouting] setSinkId not supported by runtime; using browser default routing');
+    return {
+      success: false,
+      reason: 'unsupported',
+      guaranteedEarpiece: false,
+    };
   }
 
   try {
     const outputs = await getAudioOutputDevices();
-    // Look for explicit earpiece / receiver / handset device if exposed by platform
+    // Look for explicit earpiece / receiver device ONLY if distinctly exposed by platform
     const earpiece = outputs.find(
       (d) =>
         d.deviceId &&
-        /earpiece|receiver|phone|handset|internal/i.test(d.label || '')
+        /earpiece|receiver|handset/i.test(d.label || '')
     );
 
     if (earpiece && earpiece.deviceId) {
       await (element as any).setSinkId(earpiece.deviceId);
-      console.log(`[AudioRouting] Routed to earpiece device: ${earpiece.label} (${earpiece.deviceId})`);
-      return { success: true, deviceId: earpiece.deviceId, deviceLabel: earpiece.label };
+      console.log(`[AudioRouting] Routed to explicit earpiece device: ${earpiece.label}`);
+      return {
+        success: true,
+        deviceId: earpiece.deviceId,
+        deviceLabel: earpiece.label,
+        guaranteedEarpiece: true,
+      };
     }
 
     // Standard default communications sink in W3C specification is ""
     await (element as any).setSinkId('');
-    console.log('[AudioRouting] Routed to default private-call audio sink ("")');
-    return { success: true, deviceId: '', deviceLabel: 'Default' };
+    console.log('[AudioRouting] Routed to default system audio sink ("")');
+    return {
+      success: true,
+      deviceId: '',
+      deviceLabel: 'System Default Output',
+      guaranteedEarpiece: false,
+    };
   } catch (err: any) {
-    console.warn('[AudioRouting] Error routing to default private audio output:', err);
-    return { success: false, reason: 'error', error: err };
+    console.warn('[AudioRouting] Error routing to default audio output:', err);
+    return { success: false, reason: 'error', error: err, guaranteedEarpiece: false };
   }
 }
 
 /**
  * Routes audio element to the loudspeaker / speakerphone.
- * Only succeeds if the platform exposes a distinct speaker output or supports sink switching.
+ * Fails safely if the browser does not expose a distinct speaker output device.
  */
 export async function routeAudioToSpeaker(
   element: HTMLMediaElement | null
@@ -102,11 +118,11 @@ export async function routeAudioToSpeaker(
     const outputs = await getAudioOutputDevices();
     console.log('[AudioRouting] Available audio outputs:', outputs);
 
-    // 1. Check for device with label explicitly matching speaker / loudspeaker
+    // Only switch if a distinct audio output device explicitly identified as a speaker is found
     const speaker = outputs.find(
       (d) =>
         d.deviceId &&
-        /speaker|loudspeaker|speakerphone|outer/i.test(d.label || '')
+        /speaker|loudspeaker|speakerphone/i.test(d.label || '')
     );
 
     if (speaker && speaker.deviceId) {
@@ -115,25 +131,9 @@ export async function routeAudioToSpeaker(
       return { success: true, deviceId: speaker.deviceId, deviceLabel: speaker.label };
     }
 
-    // 2. If multiple output devices exist and one is not default, try alternate output
-    const alternate = outputs.find(
-      (d) =>
-        d.deviceId &&
-        d.deviceId !== '' &&
-        d.deviceId !== 'default' &&
-        !/earpiece|receiver|phone|handset/i.test(d.label || '')
-    );
-
-    if (alternate && alternate.deviceId) {
-      await (element as any).setSinkId(alternate.deviceId);
-      console.log(`[AudioRouting] Switched to alternate output device: ${alternate.label} (${alternate.deviceId})`);
-      return { success: true, deviceId: alternate.deviceId, deviceLabel: alternate.label };
-    }
-
-    // 3. If there is only 1 device ("default") and no distinct speaker output is exposed:
-    // Some mobile browsers return only a single "default" device despite setSinkId existing.
-    // In that case, we cannot physically switch hardware routes via WebRTC API.
-    console.warn('[AudioRouting] No distinct speakerphone device found in enumerated audio outputs');
+    // If no distinct speaker device is identified in enumerated outputs:
+    // Do NOT pick a random alternate device, as that could route to microphones or headphones.
+    console.warn('[AudioRouting] No distinct speakerphone device exposed in enumerated outputs');
     return { success: false, reason: 'no_speaker_device' };
   } catch (err: any) {
     console.error('[AudioRouting] Error switching to speakerphone:', err);
